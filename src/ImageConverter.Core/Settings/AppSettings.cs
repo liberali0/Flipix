@@ -17,6 +17,9 @@ public sealed class QuickMenuSettings
     public string? MoveOriginalTo { get; set; }
 }
 
+/// <summary>Flipix Studio 화면 테마. System은 Windows 앱 모드(라이트/다크)를 따른다.</summary>
+public enum ThemePreference { System, Light, Dark }
+
 /// <summary>Flipix Studio(앱)에서 변환이 끝난 원본 파일을 어떻게 할지.</summary>
 public enum OriginalFileAction { Keep, Move }
 
@@ -26,6 +29,8 @@ public sealed class AppSettings
     /// <summary>우클릭 "빠른 이미지 포맷 변환" 하위 메뉴에 표시할 포맷 id (순서 유지).</summary>
     public QuickMenuSettings QuickMenu { get; set; } = new();
     public string DefaultTargetFormat { get; set; } = "png";
+    /// <summary>Flipix Studio 화면 테마. 기본은 Windows 설정을 따른다.</summary>
+    public ThemePreference Theme { get; set; } = ThemePreference.System;
     /// <summary>0이면 자동(코어 수의 절반).</summary>
     public int MaxParallelism { get; set; } = 0;
     public ConflictPolicy Conflict { get; set; } = ConflictPolicy.Rename;

@@ -13,6 +13,7 @@ public partial class App : Application
         base.OnStartup(e);
 
         var store = new SettingsStore();
+        ThemeService.Apply(store.Load().Theme);
         var engine = EngineFactory.Create();
         var vm = new MainViewModel(engine, store);
 

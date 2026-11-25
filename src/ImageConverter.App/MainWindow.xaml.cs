@@ -1,11 +1,16 @@
 using System.Windows;
+using ImageConverter.App.Services;
 using ImageConverter.App.ViewModels;
 
 namespace ImageConverter.App;
 
 public partial class MainWindow : Window
 {
-    public MainWindow() => InitializeComponent();
+    public MainWindow()
+    {
+        InitializeComponent();
+        SourceInitialized += (_, _) => ThemeService.ApplyTitleBar(this);
+    }
 
     private void OnDragOver(object sender, DragEventArgs e)
     {

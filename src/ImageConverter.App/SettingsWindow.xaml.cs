@@ -1,4 +1,5 @@
 using System.Windows;
+using ImageConverter.App.Services;
 using ImageConverter.Core;
 using ImageConverter.Core.Engine;
 using ImageConverter.Core.Settings;
@@ -22,6 +23,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow(QuickMenuSettings current)
     {
         InitializeComponent();
+        SourceInitialized += (_, _) => ThemeService.ApplyTitleBar(this);
         var move = current.MoveOriginal && !string.IsNullOrWhiteSpace(current.MoveOriginalTo);
         MoveOriginalRadio.IsChecked = move;
         RecycleOriginal.IsChecked = !move && current.DeleteOriginal;

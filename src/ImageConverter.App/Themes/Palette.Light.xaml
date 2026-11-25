@@ -1,0 +1,20 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 라이트 테마 색. 키 이름은 Palette.Dark.xaml과 같아야 한다. -->
+    <SolidColorBrush x:Key="Flx.Bg" Color="#F7F7FB" />
+    <SolidColorBrush x:Key="Flx.Card" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Flx.Line" Color="#E6E6EF" />
+    <SolidColorBrush x:Key="Flx.Fg" Color="#1C1C28" />
+    <SolidColorBrush x:Key="Flx.Mute" Color="#6B6B80" />
+    <SolidColorBrush x:Key="Flx.Accent" Color="#4F46E5" />
+    <SolidColorBrush x:Key="Flx.AccentHover" Color="#4338CA" />
+    <SolidColorBrush x:Key="Flx.AccentSoft" Color="#EEF0FF" />
+    <SolidColorBrush x:Key="Flx.OnAccent" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="Flx.Chip" Color="#F1F1F6" />
+    <SolidColorBrush x:Key="Flx.Hover" Color="#EDEDF4" />
+    <SolidColorBrush x:Key="Flx.Ok" Color="#16A34A" />
+    <SolidColorBrush x:Key="Flx.OkSoft" Color="#E9F7EE" />
+    <SolidColorBrush x:Key="Flx.Err" Color="#DC2626" />
+    <SolidColorBrush x:Key="Flx.ErrSoft" Color="#FDECEC" />
+    <SolidColorBrush x:Key="Flx.Warn" Color="#B45309" />
+</ResourceDictionary>
