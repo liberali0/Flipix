@@ -17,7 +17,7 @@ public sealed class QuickMenuSettings
     public string? MoveOriginalTo { get; set; }
 }
 
-/// <summary>전문 모드에서 변환이 끝난 원본 파일을 어떻게 할지.</summary>
+/// <summary>Flipix Studio(앱)에서 변환이 끝난 원본 파일을 어떻게 할지.</summary>
 public enum OriginalFileAction { Keep, Move }
 
 /// <summary>앱과 우클릭 메뉴가 함께 읽는 사용자 설정. 셸 확장은 quickMenu 섹션만 읽는다.</summary>
@@ -31,9 +31,9 @@ public sealed class AppSettings
     public ConflictPolicy Conflict { get; set; } = ConflictPolicy.Rename;
     public string? CustomOutputFolder { get; set; }
     public bool PreserveStructure { get; set; } = true;
-    /// <summary>전문 모드: 변환에 성공한 원본 처리. 기본은 그대로 둔다.</summary>
+    /// <summary>Flipix Studio: 변환에 성공한 원본 처리. 기본은 그대로 둔다.</summary>
     public OriginalFileAction OriginalAction { get; set; } = OriginalFileAction.Keep;
-    /// <summary>전문 모드: 원본을 옮길 폴더(전체 경로).</summary>
+    /// <summary>Flipix Studio: 원본을 옮길 폴더(전체 경로).</summary>
     public string? OriginalMoveFolder { get; set; }
 
     public int EffectiveParallelism =>
