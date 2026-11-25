@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Win11 첫 화면 우클릭 메뉴용 "신원 패키지"(sparse package, 외부 위치 패키지).
+  설치 마법사(Setup.exe)로 설치한 폴더를 외부 위치로 등록해서, 파일은 그대로 두고 메뉴 DLL에 패키지 신원만 줍니다.
+  build-msix.ps1 -ContextMenuOnly 가 자리표시자를 채우고 우클릭 메뉴 블록(shell-extension/AppxManifest.fragment.xml)을 넣습니다.
+  Identity Name은 전체 MSIX 패키지와 달라야 둘을 구분할 수 있습니다.
+-->
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+         xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+         xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+         xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+         xmlns:desktop5="http://schemas.microsoft.com/appx/manifest/desktop/windows10/5"
+         xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+         xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+         IgnorableNamespaces="uap uap10 desktop4 desktop5 com rescap">
+  <Identity Name="__IDENTITY_NAME__" Publisher="__PUBLISHER__" Version="__VERSION__" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>Flipix 우클릭 메뉴</DisplayName>
+    <PublisherDisplayName>__PUBLISHER_DISPLAY__</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+  <Resources><Resource Language="ko-kr" /><Resource Language="en-us" /></Resources>
+  <Applications>
+    <Application Id="App" Executable="__APP_EXE__" uap10:TrustLevel="mediumIL" uap10:RuntimeBehavior="win32App">
+      <uap:VisualElements DisplayName="Flipix" Description="무손실 이미지 포맷 변환"
+          Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png"
+          BackgroundColor="transparent" AppListEntry="none" />
+      <Extensions>
+        __CONTEXT_MENU_EXTENSIONS__
+      </Extensions>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+</Package>

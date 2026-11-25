@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <AssemblyName>imgconv</AssemblyName>
+    <RootNamespace>ImageConverter.Cli</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <ApplicationIcon>..\..\assets\branding\flipix.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ImageConverter.Engine\ImageConverter.Engine.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="ImageConverter.Cli.Tests" />
+  </ItemGroup>
+
+</Project>

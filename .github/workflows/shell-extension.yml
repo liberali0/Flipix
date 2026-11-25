@@ -1,0 +1,44 @@
+name: shell-extension
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/ShellExtension/**'
+      - 'packaging/shell-extension/**'
+      - '.github/workflows/shell-extension.yml'
+  # main 규칙에서 core-linux·windows가 필수 검사라서 모든 PR에서 돌립니다(경로 필터가 있으면 해당 없는 PR이 머지 불가로 멈춤).
+  pull_request:
+  workflow_dispatch:
+
+# 이 워크플로는 저장소를 읽기만 합니다(토큰이 탈취돼도 코드·릴리스를 바꿀 수 없음).
+permissions:
+  contents: read
+
+jobs:
+  core-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # 메모리 오류 검사기(ASan/UBSan)를 켜고 테스트: 설정 파일·경로 처리 코드의 버퍼 오류를 잡습니다.
+      - run: cmake -S src/ShellExtension -B build -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_CXX_FLAGS=-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"
+      - run: cmake --build build --parallel
+      - run: ctest --test-dir build --output-on-failure
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: cmake -S src/ShellExtension -B build -A x64
+      - run: cmake --build build --config Release --parallel
+      - run: ctest --test-dir build -C Release --output-on-failure
+      - name: Exploit mitigations (ASLR, DEP, CFG)
+        shell: pwsh
+        run: ./packaging/Test-PeHardening.ps1 -Path build/Release/ImageConverter.ShellExtension.dll
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ImageConverter.ShellExtension-x64
+          path: build/Release/ImageConverter.ShellExtension.dll

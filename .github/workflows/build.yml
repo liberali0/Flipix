@@ -1,0 +1,20 @@
+name: build
+on:
+  push:
+    branches: [main]
+  pull_request:
+# 이 워크플로는 저장소를 읽기만 합니다(토큰이 탈취돼도 코드·릴리스를 바꿀 수 없음).
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet build ImageConverter.sln -c Release
+      - run: dotnet test ImageConverter.sln -c Release --no-build

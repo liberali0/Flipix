@@ -1,0 +1,59 @@
+<!--
+  Explorer right-click menu "빠른 이미지 포맷 변환" for the MSIX package (src/ShellExtension).
+  Paste inside <Application><Extensions> of the package manifest. The package root needs
+  xmlns:desktop4, xmlns:desktop5 and xmlns:com declared (see packaging/AppxManifest.template.xml).
+
+  Keep the ItemType list identical to SupportedInputExtensions() in src/ShellExtension/core/formats.cpp:
+  the shell extension unit tests (registration_test.cpp) fail when the two drift apart.
+  Do not also run regsvr32 on the DLL in an MSIX install, or the item shows up twice.
+-->
+<desktop4:Extension Category="windows.fileExplorerContextMenus">
+  <desktop4:FileExplorerContextMenus>
+    <desktop5:ItemType Type=".png">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".jpg">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".jpeg">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".jpe">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".jfif">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".bmp">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".dib">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".tif">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".tiff">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".webp">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".avif">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".heic">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+    <desktop5:ItemType Type=".heif">
+      <desktop5:Verb Id="QuickImageConvert" Clsid="233119CD-5628-4066-AB18-D528BC05C51F" />
+    </desktop5:ItemType>
+  </desktop4:FileExplorerContextMenus>
+</desktop4:Extension>
+<com:Extension Category="windows.comServer">
+  <com:ComServer>
+    <com:SurrogateServer DisplayName="빠른 이미지 포맷 변환 메뉴">
+      <com:Class Id="233119CD-5628-4066-AB18-D528BC05C51F" Path="ImageConverter.ShellExtension.dll" ThreadingModel="STA" />
+    </com:SurrogateServer>
+  </com:ComServer>
+</com:Extension>

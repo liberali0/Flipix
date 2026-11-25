@@ -1,0 +1,208 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+    # VERSION 파일을 바꾼 커밋이 main에 들어오면 그 버전으로 태그와 릴리스를 만듭니다.
+    branches: [main]
+    paths: ['VERSION']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: '이미 만든 릴리스 태그에 파일을 올릴 때 입력 (예: v0.1.0)'
+        required: false
+        default: ''
+# 기본은 읽기 전용. 릴리스를 만드는 msix 작업만 아래에서 필요한 권한을 따로 받습니다.
+permissions:
+  contents: read
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.d.outputs.run }}
+      tag: ${{ steps.d.outputs.tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: d
+        shell: bash
+        env:
+          INPUT_TAG: ${{ inputs.release_tag }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            echo "tag=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ -n "$INPUT_TAG" ]; then
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            ver=$(tr -d ' \r\n' < VERSION)
+            if ! [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "VERSION은 MAJOR.MINOR.PATCH 형식이어야 합니다: $ver"; exit 1; fi
+            echo "tag=v$ver" >> "$GITHUB_OUTPUT"
+            # 이미 있는 버전(웹에서 먼저 만든 릴리스 포함)이면 다시 만들지 않습니다.
+            if git ls-remote --exit-code --tags origin "refs/tags/v$ver" > /dev/null; then
+              echo "v$ver 태그가 이미 있어 건너뜁니다."; echo "run=false" >> "$GITHUB_OUTPUT"
+            else
+              echo "run=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            # 태그 없이 수동 실행: 테스트용 빌드만(릴리스 없음).
+            echo "tag=" >> "$GITHUB_OUTPUT"; echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  msix:
+    needs: decide
+    if: needs.decide.outputs.run == 'true'
+    runs-on: windows-latest
+    permissions:
+      contents: write      # 릴리스 만들기
+      id-token: write      # 빌드 출처 증명(attestation) 서명
+      attestations: write  # 증명 저장
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with: { dotnet-version: '10.0.x' }
+      - name: Test
+        run: dotnet test ImageConverter.sln -c Release
+      - name: Publish
+        # 앱과 CLI를 같은 self-contained 런타임으로 한 폴더에 모읍니다(동일 런타임이라 파일이 겹쳐도 같음).
+        run: |
+          dotnet publish src/ImageConverter.App -c Release -r win-x64 --self-contained -o publish
+          dotnet publish src/ImageConverter.Cli -c Release -r win-x64 --self-contained -o publish
+      - name: Shell extension (native)
+        shell: pwsh
+        run: |
+          cmake -S src/ShellExtension -B build/shell -A x64
+          cmake --build build/shell --config Release
+          ctest --test-dir build/shell -C Release --output-on-failure
+          ./packaging/Test-PeHardening.ps1 -Path build/shell/Release/ImageConverter.ShellExtension.dll
+          Copy-Item build/shell/Release/ImageConverter.ShellExtension.dll publish/
+      - name: Version
+        id: v
+        shell: pwsh
+        env:
+          REF_NAME: ${{ needs.decide.outputs.tag }}
+          IS_TAG: ${{ needs.decide.outputs.tag != '' }}
+        run: |
+          $t = $env:REF_NAME -replace '^v',''
+          if ($t -notmatch '^\d+\.\d+\.\d+$') {
+            if ($env:IS_TAG -eq 'true') { throw "태그는 vMAJOR.MINOR.PATCH 형식이어야 합니다: $env:REF_NAME" }
+            $t = '0.0.1'
+          }
+          "version=$t.0" >> $env:GITHUB_OUTPUT
+          "semver=$t" >> $env:GITHUB_OUTPUT
+      - name: Korean wizard language (선택, 실패하면 영어만)
+        shell: pwsh
+        continue-on-error: true
+        run: |
+          # 설치 파일 안에 들어가는 파일이라 고정된 버전(Inno Setup 6.7.4 태그 커밋)만 받고 해시를 확인합니다.
+          # 움직이는 main 브랜치에서 받으면 남이 바꾼 내용이 그대로 설치 파일에 섞일 수 있습니다.
+          $dest = "${env:ProgramFiles(x86)}\Inno Setup 6\Languages\Korean.isl"
+          if (-not (Test-Path $dest)) {
+            $tmp = Join-Path $env:RUNNER_TEMP "Korean.isl"
+            Invoke-WebRequest "https://raw.githubusercontent.com/jrsoftware/issrc/c2913c993858a781fcb455bac8b8949c1c366cb8/Files/Languages/Korean.isl" -OutFile $tmp
+            $hash = (Get-FileHash -Algorithm SHA256 $tmp).Hash
+            if ($hash -ne 'CB56D6EA5C082BCF6B4ACC1AE4C303BA91F662B1D0BFE05E4D3902C38C41E02A') { throw "Korean.isl hash mismatch: $hash" }
+            Move-Item $tmp $dest
+          }
+      - name: Signing certificate
+        shell: pwsh
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+        run: |
+          # MSIX와 설치 마법사의 우클릭 메뉴 패키지를 같은 인증서로 서명합니다.
+          $pfx = Join-Path $env:RUNNER_TEMP "sign.pfx"
+          if ($env:SIGN_PFX_BASE64) {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:SIGN_PFX_BASE64))
+            $pw = $env:SIGN_PFX_PASSWORD
+          } else {
+            # 비밀값이 없으면 실행마다 새 자체 서명 인증서를 만듭니다(업데이트 때마다 인증서 신뢰 등록이 다시 필요).
+            $pw = [Guid]::NewGuid().ToString()
+            ./packaging/New-DevCertificate.ps1 -Password $pw -OutDir $env:RUNNER_TEMP
+            Move-Item (Join-Path $env:RUNNER_TEMP "ImageConverter.pfx") $pfx -Force
+          }
+          Write-Host "::add-mask::$pw"
+          "SIGN_PW=$pw" >> $env:GITHUB_ENV
+          "SIGN_PFX=$pfx" >> $env:GITHUB_ENV
+      - name: Build and sign MSIX (선택 설치 방법)
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: ./packaging/build-msix.ps1 -Version $env:VERSION -PublishDir publish -PfxPath $env:SIGN_PFX -PfxPassword $env:SIGN_PW
+      - name: Context menu package for the setup wizard (Win11 첫 화면 메뉴)
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          ./packaging/build-msix.ps1 -ContextMenuOnly -Version $env:VERSION -PublishDir publish -PfxPath $env:SIGN_PFX -PfxPassword $env:SIGN_PW
+          Copy-Item packaging/out/ImageConverter.ContextMenu.msix, packaging/out/ImageConverter.cer publish/
+      - name: Build setup wizard (기본 설치 파일)
+        shell: pwsh
+        env:
+          SEMVER: ${{ steps.v.outputs.semver }}
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+        run: |
+          # 설치 마법사 exe 자체는 상용 인증서가 있을 때만 서명합니다(자체 서명은 SmartScreen에 도움이 안 됨).
+          if ($env:SIGN_PFX_BASE64) {
+            ./packaging/build-installer.ps1 -Version $env:SEMVER -PublishDir publish -PfxPath $env:SIGN_PFX -PfxPassword $env:SIGN_PW
+          } else {
+            ./packaging/build-installer.ps1 -Version $env:SEMVER -PublishDir publish
+          }
+      - name: Remove signing certificate
+        if: always()
+        shell: pwsh
+        run: |
+          if ($env:SIGN_PFX) { Remove-Item $env:SIGN_PFX -Force -ErrorAction SilentlyContinue }
+      - name: Collect
+        shell: pwsh
+        run: |
+          mkdir release
+          Copy-Item packaging/out/Flipix-Setup-*.exe release/
+          Copy-Item packaging/out/ImageConverter.msix, packaging/out/ImageConverter.cer, packaging/Install.ps1 release/
+          # 내려받은 파일이 원본 그대로인지 누구나 확인할 수 있게 SHA-256 해시 목록을 함께 올립니다.
+          Push-Location release
+          Get-ChildItem -File | Sort-Object Name | ForEach-Object {
+            "{0}  {1}" -f (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLowerInvariant(), $_.Name
+          } | Set-Content -Encoding ascii SHA256SUMS.txt
+          Get-Content SHA256SUMS.txt
+          Pop-Location
+      - name: Build provenance (이 저장소의 이 커밋에서 GitHub가 빌드했다는 서명된 증명)
+        if: needs.decide.outputs.tag != ''
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: 'release/*'
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ImageConverter-msix
+          path: release/*
+      - name: GitHub Release
+        if: needs.decide.outputs.tag != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.decide.outputs.tag }}
+        run: |
+          # 웹에서 먼저 릴리스를 만들었으면 파일만 올리고, 없으면 새로 만듭니다.
+          # 이미 파일이 올라간 릴리스는 절대 덮어쓰지 않습니다(나간 설치 파일이 몰래 바뀌는 것을 막음).
+          $existing = gh release view $env:TAG --json assets --jq '.assets | length' 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            if ([int]$existing -gt 0) { throw "$env:TAG 릴리스에 이미 파일이 있어 덮어쓰지 않습니다. 새 버전을 정의해 주세요." }
+            gh release upload $env:TAG (Get-ChildItem release).FullName
+          } else {
+            # 릴리스 노트 첫 줄: 가운데 자리(또는 첫 자리)가 바뀌면 Major Upgrade, 셋째 자리만 바뀌면 Minor Upgrade.
+            $prev = gh release list --exclude-drafts --limit 20 --json tagName --jq '.[].tagName' |
+              Where-Object { $_ -ne $env:TAG -and $_ -match '^v\d+\.\d+\.\d+$' } | Select-Object -First 1
+            $cur = [version]$env:TAG.TrimStart('v')
+            if ($prev) {
+              $old = [version]$prev.TrimStart('v')
+              $kind = if ($cur.Major -ne $old.Major -or $cur.Minor -ne $old.Minor) { 'Major Upgrade' } else { 'Minor Upgrade' }
+              $notes = "**$kind** ($prev → $env:TAG)"
+            } else {
+              $notes = "**첫 릴리스**"
+            }
+            # 태그가 아직 없으면(VERSION 방식) 이 빌드의 커밋에 태그를 만듭니다. 자동 변경 목록은 위 줄 뒤에 붙습니다.
+            gh release create $env:TAG (Get-ChildItem release).FullName --title $env:TAG --notes $notes --generate-notes --target $env:GITHUB_SHA
+          }
+          if ($LASTEXITCODE) { throw "release upload failed" }

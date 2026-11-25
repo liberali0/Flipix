@@ -1,0 +1,9 @@
+<Project>
+  <!-- Shared settings for the engine/CLI projects only; other projects set their own. -->
+  <PropertyGroup Condition="$(MSBuildProjectName.StartsWith('ImageConverter.Engine')) Or $(MSBuildProjectName.StartsWith('ImageConverter.Cli'))">
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12.0</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12.0</LangVersion>
+    <RootNamespace>ImageConverter.App</RootNamespace>
+    <AssemblyName>ImageConverter</AssemblyName>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon>..\..\assets\branding\flipix.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- WPF 프로젝트는 System.IO를 암시적으로 가져오지 않는다. -->
+    <Using Include="System.IO" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 창 제목 표시줄·작업 표시줄 아이콘 -->
+    <Resource Include="..\..\assets\branding\flipix.ico" Link="Assets\flipix.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ImageConverter.Core\ImageConverter.Core.csproj" />
+    <ProjectReference Include="..\ImageConverter.Engine\ImageConverter.Engine.csproj" />
+  </ItemGroup>
+</Project>

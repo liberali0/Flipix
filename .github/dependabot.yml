@@ -1,0 +1,13 @@
+# 고정해 둔 GitHub Actions 버전(커밋 해시)과 NuGet 패키지에 보안 업데이트가 나오면 PR로 알려 줍니다.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: main
+    schedule:
+      interval: weekly
+  - package-ecosystem: nuget
+    directory: /
+    target-branch: main
+    schedule:
+      interval: weekly

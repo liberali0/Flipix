@@ -1,0 +1,46 @@
+name: installer
+on:
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - '.github/workflows/installer.yml'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+# 이 워크플로는 저장소를 읽기만 합니다(토큰이 탈취돼도 코드·릴리스를 바꿀 수 없음).
+permissions:
+  contents: read
+jobs:
+  compile:
+    # 실제 앱 대신 빈 파일로 설치 마법사와 Win11 우클릭 메뉴 패키지가 만들어지는지 확인합니다.
+    # 진짜 설치 파일은 release.yml이 만듭니다.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Dummy publish folder
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dummy | Out-Null
+          foreach ($f in 'ImageConverter.exe','imgconv.exe','ImageConverter.ShellExtension.dll') { Set-Content (Join-Path dummy $f) 'x' }
+      - name: Context menu package (sparse MSIX)
+        shell: pwsh
+        run: |
+          $pw = [Guid]::NewGuid().ToString()
+          ./packaging/New-DevCertificate.ps1 -Password $pw -OutDir $env:RUNNER_TEMP
+          ./packaging/build-msix.ps1 -ContextMenuOnly -Version 0.0.1.0 -PublishDir dummy -PfxPath (Join-Path $env:RUNNER_TEMP ImageConverter.pfx) -PfxPassword $pw
+          Copy-Item packaging/out/ImageConverter.ContextMenu.msix, packaging/out/ImageConverter.cer dummy/
+      - name: Register and remove the package like the installer does
+        # 러너 OS가 외부 위치 패키지를 지원하지 않으면 실패할 수 있어 결과만 남깁니다.
+        continue-on-error: true
+        shell: powershell
+        run: |
+          Copy-Item packaging/installer/ContextMenu.ps1 dummy/
+          powershell -NoProfile -ExecutionPolicy Bypass -File dummy/ContextMenu.ps1 -Action Trust; if ($LASTEXITCODE) { throw "Trust failed" }
+          powershell -NoProfile -ExecutionPolicy Bypass -File dummy/ContextMenu.ps1 -Action IsTrusted; if ($LASTEXITCODE) { throw "IsTrusted failed" }
+          powershell -NoProfile -ExecutionPolicy Bypass -File dummy/ContextMenu.ps1 -Action Register; if ($LASTEXITCODE) { throw "Register failed" }
+          Get-AppxPackage -Name ImageConverter.QuickConverter.ContextMenu | Format-List Name, Version, InstallLocation, IsDevelopmentMode
+          powershell -NoProfile -ExecutionPolicy Bypass -File dummy/ContextMenu.ps1 -Action Unregister; if ($LASTEXITCODE) { throw "Unregister failed" }
+      - name: Setup wizard
+        shell: pwsh
+        run: ./packaging/build-installer.ps1 -Version 0.0.1 -PublishDir dummy
