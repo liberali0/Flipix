@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Collections.Specialized;
 using System.Windows.Input;
+using ImageConverter.App.Services;
 using ImageConverter.Core;
 using ImageConverter.Core.Batch;
 using ImageConverter.Core.Engine;
@@ -58,7 +59,7 @@ public sealed class MainViewModel : ObservableObject
             _outputFolder = _settings.CustomOutputFolder!;
         }
 
-        Jobs.CollectionChanged += (_, _) => { Raise(nameof(IsEmpty)); };
+        Jobs.CollectionChanged += (_, _) => { Raise(nameof(IsEmpty)); Raise(nameof(JobCountText)); };
 
         AddFilesCommand = new RelayCommand(AddFiles, () => CanEdit);
         AddFolderCommand = new RelayCommand(AddFolder, () => CanEdit);
@@ -87,6 +88,43 @@ public sealed class MainViewModel : ObservableObject
         new Choice<OriginalFileAction>(OriginalFileAction.Keep, "그대로 두기"),
         new Choice<OriginalFileAction>(OriginalFileAction.Move, "지정 폴더로 옮기기"),
     };
+    public IReadOnlyList<Choice<bool>> SaveLocationChoices { get; } = new[]
+    {
+        new Choice<bool>(false, "원본과 같은 폴더"),
+        new Choice<bool>(true, "지정 폴더"),
+    };
+    public IReadOnlyList<Choice<ThemePreference>> ThemeChoices { get; } = new[]
+    {
+        new Choice<ThemePreference>(ThemePreference.System, "시스템"),
+        new Choice<ThemePreference>(ThemePreference.Light, "라이트"),
+        new Choice<ThemePreference>(ThemePreference.Dark, "다크"),
+    };
+
+    /// <summary>화면 테마. 바꾸면 바로 적용하고 설정에 저장한다.</summary>
+    public ThemePreference Theme
+    {
+        get => _settings.Theme;
+        set
+        {
+            if (_settings.Theme == value) return;
+            _settings.Theme = value;
+            Raise();
+            ThemeService.Apply(value);
+            try { _store.Save(_settings); } catch { /* 테마 저장 실패는 무시 */ }
+        }
+    }
+
+    /// <summary>빠른 변환 카드: 우클릭 메뉴에 바로 보이는 형식(대문자).</summary>
+    public IReadOnlyList<string> QuickFormats =>
+        _settings.QuickMenu.Formats.Select(id => FormatCatalog.TryGet(id)?.Id.ToUpperInvariant()).OfType<string>().ToList();
+
+    /// <summary>빠른 변환 카드: 변환이 끝난 원본을 어떻게 하는지 한 줄로.</summary>
+    public string QuickOriginalText =>
+        _settings.QuickMenu.MoveOriginal && !string.IsNullOrWhiteSpace(_settings.QuickMenu.MoveOriginalTo)
+            ? "원본: " + _settings.QuickMenu.MoveOriginalTo + "(으)로 옮기기"
+            : _settings.QuickMenu.DeleteOriginal ? "원본: 휴지통으로 보내기" : "원본: 그대로 두기";
+
+    public string JobCountText => $"{Jobs.Count:N0}개";
     public int MaxParallelismLimit => Math.Max(2, Environment.ProcessorCount);
 
     public ICommand AddFilesCommand { get; }
@@ -332,6 +370,8 @@ public sealed class MainViewModel : ObservableObject
             _settings.QuickMenu.DeleteOriginal = win.DeleteOriginal;
             _settings.QuickMenu.MoveOriginal = win.MoveOriginal;
             _settings.QuickMenu.MoveOriginalTo = win.MoveOriginalTo;
+            Raise(nameof(QuickFormats));
+            Raise(nameof(QuickOriginalText));
             try { _store.Save(_settings); StatusText = "빠른 변환 설정을 저장했습니다."; }
             catch (Exception ex) { StatusText = "설정 저장 실패: " + ex.Message; }
         }
