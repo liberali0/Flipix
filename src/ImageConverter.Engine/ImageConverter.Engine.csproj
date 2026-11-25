@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <!-- Q16 keeps 16-bit channels exact; the package ships native codecs for win-x64 (and linux-x64 for CI). -->
-    <PackageReference Include="Magick.NET-Q16-x64" Version="15.1.0" />
+    <PackageReference Include="Magick.NET-Q16-x64" Version="15.1.1" />
   </ItemGroup>
 
   <ItemGroup>
