@@ -40,6 +40,8 @@ public sealed class AppSettings
     public OriginalFileAction OriginalAction { get; set; } = OriginalFileAction.Keep;
     /// <summary>Flipix Workshop: 원본을 옮길 폴더(전체 경로).</summary>
     public string? OriginalMoveFolder { get; set; }
+    /// <summary>Flipix Workshop을 열 때 새 버전이 있는지 확인한다. 기본은 켬.</summary>
+    public bool CheckForUpdates { get; set; } = true;
 
     public int EffectiveParallelism =>
         MaxParallelism > 0 ? MaxParallelism : Math.Max(1, Environment.ProcessorCount / 2);

@@ -10,6 +10,8 @@
     <AssemblyName>ImageConverter</AssemblyName>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationIcon>..\..\assets\branding\flipix.ico</ApplicationIcon>
+    <!-- 앱 버전은 저장소 루트 VERSION 파일을 따른다(업데이트 확인에서 내 버전과 비교). -->
+    <Version>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)..\..\VERSION').Trim())</Version>
   </PropertyGroup>
   <ItemGroup>
     <!-- WPF 프로젝트는 System.IO를 암시적으로 가져오지 않는다. -->

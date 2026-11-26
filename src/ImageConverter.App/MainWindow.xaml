@@ -60,6 +60,11 @@
                     <Button Style="{StaticResource Flx.Button}" Content="폴더 추가" Command="{Binding AddFolderCommand}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- 새 버전이 있을 때만 보인다 -->
+                    <Button Style="{StaticResource Flx.PrimaryButton}" Content="{Binding UpdateButtonText}"
+                            Command="{Binding UpdateCommand}" Margin="0,0,10,0"
+                            Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}"
+                            ToolTip="설치 위치와 설정은 그대로 두고 프로그램만 새 버전으로 바꿉니다" />
                     <Border Background="{DynamicResource Flx.Chip}" CornerRadius="7" Padding="3" Margin="0,0,10,0"
                             ToolTip="화면 테마">
                         <ListBox Style="{StaticResource Flx.PlainList}" ItemContainerStyle="{StaticResource Flx.SegmentItem}"
@@ -71,6 +76,21 @@
                     </Border>
                     <Button Style="{StaticResource Flx.GhostButton}" Content="문의하기" Command="{Binding ContactCommand}"
                             ToolTip="{Binding ContactToolTip}" />
+                    <!-- 자주 쓰지 않는 기능은 더보기 메뉴에 둔다 -->
+                    <Button Style="{StaticResource Flx.GhostButton}" Content="⋯" FontSize="15" Padding="10,2"
+                            ToolTip="더보기" Click="OnMoreClick">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="업데이트 확인" Command="{Binding CheckUpdatesCommand}" />
+                                <MenuItem Header="Workshop을 열 때 새 버전 확인" IsCheckable="True"
+                                          IsChecked="{Binding CheckForUpdatesOnStart}" />
+                                <Separator />
+                                <MenuItem Header="바탕 화면에 바로 가기 만들기" Command="{Binding CreateShortcutCommand}" />
+                                <Separator />
+                                <MenuItem Header="{Binding VersionText}" IsEnabled="False" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                 </StackPanel>
             </DockPanel>
         </Border>

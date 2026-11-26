@@ -38,6 +38,7 @@ public partial class App : Application
         var window = new MainWindow { DataContext = vm };
         window.Show();
         if (paths.Count > 0) _ = vm.AddPathsAsync(paths);
+        _ = vm.CheckOnStartAsync(); // 새 버전이 있으면 상단 막대에 업데이트 단추가 나타난다
     }
 
     private static void ReportCrash(Exception ex)
