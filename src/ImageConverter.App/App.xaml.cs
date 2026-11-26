@@ -53,7 +53,7 @@ public partial class App : Application
         catch { logPath = null; }
 
         var detail = logPath is null ? ex.Message : $"{ex.Message}\n\n자세한 내용: {logPath}";
-        try { MessageBox.Show($"Flipix Studio를 실행하는 중 문제가 생겼습니다.\n\n{detail}", "Flipix Studio", MessageBoxButton.OK, MessageBoxImage.Error); }
+        try { MessageBox.Show($"Flipix Workshop를 실행하는 중 문제가 생겼습니다.\n\n{detail}", "Flipix Workshop", MessageBoxButton.OK, MessageBoxImage.Error); }
         catch { }
     }
 

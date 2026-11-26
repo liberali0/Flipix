@@ -1,4 +1,4 @@
-# Flipix Studio 앱 (src/ImageConverter.App)
+# Flipix Workshop 앱 (src/ImageConverter.App)
 
 - 위쪽 "문의하기" 버튼: 기본 브라우저로 개발자 X 프로필(https://x.com/Liberali_0)을 연다.
 - WPF (.NET 10), 로직은 `ImageConverter.Core` (플랫폼 비의존)에 있다.
