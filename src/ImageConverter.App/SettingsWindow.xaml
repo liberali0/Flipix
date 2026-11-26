@@ -31,7 +31,7 @@
         </Border>
 
         <StackPanel Margin="16">
-            <Border Style="{StaticResource Flx.Card}" Padding="16,4,16,12">
+            <Border Style="{StaticResource Flx.CardPanel}" Padding="16,4,16,12">
                 <StackPanel>
                     <TextBlock Style="{StaticResource Flx.Label}" Text="우클릭 메뉴에 바로 보일 형식" />
                     <ItemsControl x:Name="FormatList">
@@ -47,7 +47,7 @@
                 </StackPanel>
             </Border>
 
-            <Border Style="{StaticResource Flx.Card}" Padding="16,4,16,12" Margin="0,12,0,0">
+            <Border Style="{StaticResource Flx.CardPanel}" Padding="16,4,16,12" Margin="0,12,0,0">
                 <StackPanel>
                     <TextBlock Style="{StaticResource Flx.Label}" Text="변환이 끝난 원본 파일" />
                     <RadioButton x:Name="KeepOriginal" GroupName="Original" Content="그대로 남기기" Margin="0,2" />
