@@ -67,7 +67,7 @@
     </Style>
 
     <!-- 카드 -->
-    <Style x:Key="Flx.Card" TargetType="Border">
+    <Style x:Key="Flx.CardPanel" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource Flx.Card}" />
         <Setter Property="BorderBrush" Value="{DynamicResource Flx.Line}" />
         <Setter Property="BorderThickness" Value="1" />

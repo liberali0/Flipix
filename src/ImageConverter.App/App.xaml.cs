@@ -11,6 +11,13 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        // 처리되지 않은 오류로 조용히 꺼지지 않도록, 내용을 보여 주고 로그로 남긴다.
+        DispatcherUnhandledException += (_, args) =>
+        {
+            ReportCrash(args.Exception);
+            args.Handled = true;
+            Shutdown(1);
+        };
 
         var store = new SettingsStore();
         ThemeService.Apply(store.Load().Theme);
@@ -31,6 +38,23 @@ public partial class App : Application
         var window = new MainWindow { DataContext = vm };
         window.Show();
         if (paths.Count > 0) _ = vm.AddPathsAsync(paths);
+    }
+
+    private static void ReportCrash(Exception ex)
+    {
+        string? logPath = null;
+        try
+        {
+            var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Flipix");
+            Directory.CreateDirectory(dir);
+            logPath = Path.Combine(dir, "crash.log");
+            File.AppendAllText(logPath, $"[{DateTime.Now:O}] {ex}{Environment.NewLine}{Environment.NewLine}");
+        }
+        catch { logPath = null; }
+
+        var detail = logPath is null ? ex.Message : $"{ex.Message}\n\n자세한 내용: {logPath}";
+        try { MessageBox.Show($"Flipix Studio를 실행하는 중 문제가 생겼습니다.\n\n{detail}", "Flipix Studio", MessageBoxButton.OK, MessageBoxImage.Error); }
+        catch { }
     }
 
     // 선택 항목이 많을 때 셸 확장이 넘기는 `@목록파일` (UTF-8, 한 줄에 경로 하나)
