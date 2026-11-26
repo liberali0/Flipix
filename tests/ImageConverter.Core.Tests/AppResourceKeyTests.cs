@@ -3,7 +3,7 @@ using System.Xml.Linq;
 namespace ImageConverter.Core.Tests;
 
 /// <summary>
-/// Studio(WPF) 리소스 사전의 키 충돌 검사. 같은 키가 색 팔레트와 스타일 사전에 함께 있으면
+/// Workshop(WPF) 리소스 사전의 키 충돌 검사. 같은 키가 색 팔레트와 스타일 사전에 함께 있으면
 /// 나중에 합쳐진 쪽이 이겨서 Brush 자리에 Style이 들어가고, 앱이 시작하자마자 꺼진다(v0.1.3).
 /// </summary>
 public class AppResourceKeyTests

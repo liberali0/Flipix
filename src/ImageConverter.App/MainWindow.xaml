@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:batch="clr-namespace:ImageConverter.Core.Batch;assembly=ImageConverter.Core"
         Icon="pack://application:,,,/Assets/flipix.ico"
-        Title="Flipix Studio" Width="1120" Height="720" MinWidth="900" MinHeight="560"
+        Title="Flipix Workshop" Width="1120" Height="720" MinWidth="900" MinHeight="560"
         Background="{DynamicResource Flx.Bg}" Foreground="{DynamicResource Flx.Fg}"
         FontFamily="Segoe UI Variable Text, Segoe UI, Malgun Gothic" FontSize="13"
         AllowDrop="True" Drop="OnDrop" DragOver="OnDragOver" WindowStartupLocation="CenterScreen">
@@ -54,7 +54,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                     <Image Source="pack://application:,,,/Assets/flipix.ico" Width="26" Height="26"
                            RenderOptions.BitmapScalingMode="HighQuality" />
-                    <TextBlock Text="Flipix Studio" FontSize="16" FontWeight="SemiBold" Margin="10,0,22,0"
+                    <TextBlock Text="Flipix Workshop" FontSize="16" FontWeight="SemiBold" Margin="10,0,22,0"
                                VerticalAlignment="Center" />
                     <Button Style="{StaticResource Flx.PrimaryButton}" Content="+  파일 추가" Command="{Binding AddFilesCommand}" />
                     <Button Style="{StaticResource Flx.Button}" Content="폴더 추가" Command="{Binding AddFolderCommand}" />
