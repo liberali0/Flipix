@@ -17,6 +17,7 @@ public class ImageFormatsTests
     [InlineData("avif", ImageFormat.Avif)]
     [InlineData("heic", ImageFormat.Heic)]
     [InlineData("heif", ImageFormat.Heic)]
+    [InlineData(".GIF", ImageFormat.Gif)]
     public void TryParse_accepts_ids_and_extensions(string text, ImageFormat expected)
     {
         Assert.True(ImageFormats.TryParse(text, out var format));
@@ -25,7 +26,7 @@ public class ImageFormatsTests
 
     [Theory]
     [InlineData("")]
-    [InlineData("gif")]
+    [InlineData("psd")]
     [InlineData("svg")]
     public void TryParse_rejects_unknown(string text)
     {

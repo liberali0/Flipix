@@ -12,6 +12,8 @@
 #define AppName "Flipix"
 #define AppExe "ImageConverter.exe"
 #define ShellDll "ImageConverter.ShellExtension.dll"
+; ARM64 PC용 우클릭 메뉴 DLL. 설치할 때 위 이름으로 바꿔 넣습니다(탐색기가 ARM64라 x64 DLL은 못 불러옴).
+#define ShellDllArm64 "ImageConverter.ShellExtension.arm64.dll"
 #define KoreanIsl AddBackslash(CompilerPath) + "Languages\Korean.isl"
 
 [Setup]
@@ -28,6 +30,7 @@ OutputDir={#OutDir}
 OutputBaseFilename=Flipix-Setup-{#AppVersion}
 Compression=lzma2/max
 SolidCompression=yes
+; x64compatible: x64 Windows와 ARM64 Windows 11(x64 에뮬레이션 지원) 모두 설치됩니다.
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ; 기본은 현재 사용자 전용 설치(관리자 권한 불필요). 마법사에서 모든 사용자 설치도 고를 수 있습니다.
@@ -79,7 +82,10 @@ Name: "desktopicon"; Description: "{cm:TaskDesktopIcon}"; Flags: unchecked
 Name: "addtopath"; Description: "{cm:TaskPath}"; Flags: unchecked
 
 [Files]
-Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "{#SourceDir}\*"; Excludes: "\{#ShellDll},\{#ShellDllArm64}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; 우클릭 메뉴 DLL은 PC의 CPU에 맞는 것 하나만 넣습니다. 앱과 CLI는 x64이며 ARM64 Windows 11에서는 x64 에뮬레이션으로 돕니다.
+Source: "{#SourceDir}\{#ShellDll}"; DestDir: "{app}"; Flags: ignoreversion; Check: not IsArm64
+Source: "{#SourceDir}\{#ShellDllArm64}"; DestDir: "{app}"; DestName: "{#ShellDll}"; Flags: ignoreversion; Check: IsArm64
 ; Win11 첫 화면 메뉴 등록 도우미. 메뉴 패키지(ImageConverter.ContextMenu.msix)와 인증서(.cer)는 release.yml이 publish 폴더에 넣습니다.
 Source: "ContextMenu.ps1"; DestDir: "{app}"; Flags: ignoreversion
 ; Windows 설정 > 앱의 [수정]이 실행할 설치 파일 사본. 설치 위치를 옮길 때도 지워지지 않도록 설치 폴더 밖에 둡니다.

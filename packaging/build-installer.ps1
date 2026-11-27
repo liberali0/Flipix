@@ -1,13 +1,13 @@
 param(
   [Parameter(Mandatory)][string]$Version,            # 예: 1.0.0
-  [Parameter(Mandatory)][string]$PublishDir,         # 앱 + imgconv.exe + 셸 확장 DLL이 모인 폴더
+  [Parameter(Mandatory)][string]$PublishDir,         # 앱 + imgconv.exe + 셸 확장 DLL(x64, arm64)이 모인 폴더
   [string]$PfxPath = "",
   [string]$PfxPassword = "",
   [string]$OutDir = "$PSScriptRoot\out"
 )
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Version must be MAJOR.MINOR.PATCH: $Version" }
-foreach ($f in "ImageConverter.exe","imgconv.exe","ImageConverter.ShellExtension.dll") {
+foreach ($f in "ImageConverter.exe","imgconv.exe","ImageConverter.ShellExtension.dll","ImageConverter.ShellExtension.arm64.dll") {
   if (-not (Test-Path (Join-Path $PublishDir $f))) { throw "Missing in PublishDir: $f" }
 }
 $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe","$env:ProgramFiles\Inno Setup 6\ISCC.exe") |

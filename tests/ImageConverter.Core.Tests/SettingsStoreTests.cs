@@ -1,4 +1,5 @@
 using ImageConverter.Core.Batch;
+using ImageConverter.Core.Localization;
 using ImageConverter.Core.Settings;
 
 namespace ImageConverter.Core.Tests;
@@ -123,6 +124,18 @@ public class SettingsStoreTests
         var back = store.Load();
         Assert.Equal(QuickNotify.Always, back.QuickMenu.Notify);
         Assert.False(back.CheckForUpdates);
+    }
+
+    [Fact]
+    public void Writes_language_key_the_shell_extension_reads()
+    {
+        using var d = new TempDir();
+        var store = new SettingsStore(Path.Combine(d.Path, "s.json"));
+        Assert.Equal(UiLanguage.Auto, store.Load().Language);
+        store.Save(new AppSettings { Language = UiLanguage.English });
+
+        Assert.Contains("\"language\": \"english\"", File.ReadAllText(store.Path));
+        Assert.Equal(UiLanguage.English, store.Load().Language);
     }
 
     [Fact]

@@ -21,19 +21,20 @@ struct MenuItem {
 bool operator==(const MenuItem& left, const MenuItem& right);
 std::ostream& operator<<(std::ostream& stream, const MenuItem& item);
 
-// L"빠른 이미지 포맷 변환"
-std::wstring RootTitle();
+// L"빠른 이미지 포맷 변환", or L"Quick image format convert" in English.
+std::wstring RootTitle(bool english = false);
 
 // Every item the settings ask for, ignoring the selection: one "to X" per format, then a
 // separator and "자세히..." when details are on. Explorer asks for subcommands without
 // telling which files are selected, so this is what EnumSubCommands returns.
-std::vector<MenuItem> ConfiguredSubmenu(const QuickMenuSettings& settings);
+std::vector<MenuItem> ConfiguredSubmenu(const QuickMenuSettings& settings, bool english = false);
 
 // Whether an item from ConfiguredSubmenu should be shown for this selection.
 bool IsItemVisible(const MenuItem& item, const QuickMenuSettings& settings, const std::vector<std::wstring>& paths);
 
 // ConfiguredSubmenu filtered by IsItemVisible. Empty means: hide the whole menu.
-std::vector<MenuItem> VisibleSubmenu(const QuickMenuSettings& settings, const std::vector<std::wstring>& paths);
+std::vector<MenuItem> VisibleSubmenu(const QuickMenuSettings& settings, const std::vector<std::wstring>& paths,
+                                     bool english = false);
 
 // The selected files the engine can read, in selection order.
 std::vector<std::wstring> SupportedFiles(const std::vector<std::wstring>& paths);

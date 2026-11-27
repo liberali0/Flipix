@@ -130,6 +130,7 @@ public:
         return Guarded([&]() -> HRESULT {
             const std::vector<std::wstring> paths = SelectedPaths(items);
             LaunchRequest request;
+            request.english = EnglishUi(*settings_);
             switch (item_.kind) {
                 case MenuItemKind::Convert:
                     request.exePath = PathInModuleDirectory(kCliExeName);
@@ -223,7 +224,7 @@ private:
 class RootCommand final : public CommandBase {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, PWSTR* title) override {
-        return Guarded([&] { return DuplicateString(RootTitle(), title); });
+        return Guarded([&] { return DuplicateString(RootTitle(EnglishUi(LoadSettings())), title); });
     }
 
     // Flipix icon next to the menu entry (the app's first icon resource).
@@ -259,7 +260,7 @@ public:
         return Guarded([&] {
             auto settings = std::make_shared<const QuickMenuSettings>(LoadSettings());
             std::vector<ComPtr<IExplorerCommand>> items;
-            for (auto& item : ConfiguredSubmenu(*settings)) {
+            for (auto& item : ConfiguredSubmenu(*settings, EnglishUi(*settings))) {
                 ComPtr<IExplorerCommand> command;
                 command.Attach(new ItemCommand(settings, std::move(item)));
                 items.push_back(std::move(command));

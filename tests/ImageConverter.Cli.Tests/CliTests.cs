@@ -362,4 +362,60 @@ public sealed class CliTests : IDisposable
         Assert.Equal(2, code);
         Assert.True(System.IO.File.Exists(a));
     }
+
+    private string AnimatedGif(string name)
+    {
+        using var frames = new MagickImageCollection();
+        frames.Add(new MagickImage(MagickColors.Red, 6, 4) { AnimationDelay = 10 });
+        frames.Add(new MagickImage(MagickColors.Blue, 6, 4) { AnimationDelay = 10 });
+        var path = File(name);
+        frames.Write(path, MagickFormat.Gif);
+        return path;
+    }
+
+    [Fact]
+    public async Task Animated_gif_first_frame_keeps_the_original_even_with_delete_source()
+    {
+        var previous = SourceRecycler.Recycle;
+        var recycled = new List<string>();
+        SourceRecycler.Recycle = p => { recycled.Add(p); return null; };
+        try
+        {
+            var gif = AnimatedGif("anim.gif");
+
+            var code = await Run("convert", "--to", "png", "--delete-source", gif);
+
+            Assert.Equal(0, code);
+            Assert.True(System.IO.File.Exists(File("anim.png")));
+            Assert.Empty(recycled);
+        }
+        finally
+        {
+            SourceRecycler.Recycle = previous;
+        }
+    }
+
+    [Fact]
+    public async Task All_frames_writes_a_folder_and_then_the_original_can_go()
+    {
+        var previous = SourceRecycler.Recycle;
+        var recycled = new List<string>();
+        SourceRecycler.Recycle = p => { recycled.Add(p); return null; };
+        try
+        {
+            var gif = AnimatedGif("anim.gif");
+
+            var code = await Run("convert", "--to", "png", "--all-frames", "--delete-source", gif);
+
+            Assert.Equal(0, code);
+            Assert.True(System.IO.File.Exists(File(Path.Combine("anim_frames", "anim_001.png"))));
+            Assert.True(System.IO.File.Exists(File(Path.Combine("anim_frames", "anim_002.png"))));
+            Assert.Contains("[2 frames]", _out.ToString());
+            Assert.Equal(new[] { gif }, recycled);
+        }
+        finally
+        {
+            SourceRecycler.Recycle = previous;
+        }
+    }
 }

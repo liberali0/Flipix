@@ -98,3 +98,9 @@ TEST(ManifestFragment_UsesTheDllClsidVerbAndFileName) {
     CHECK_EQ(AttributeValues(xml, "Path"), std::vector<std::string>{"ImageConverter.ShellExtension.dll"});
     CHECK_EQ(AttributeValues(xml, "ThreadingModel"), std::vector<std::string>{"STA"});
 }
+
+TEST(LegacyRegistration_EnglishMenuName) {
+    const auto values = LegacyRegistrationValues(kShellExtensionClsid, kDll, true);
+    const std::wstring verbKey = L"Software\\Classes\\SystemFileAssociations\\.png\\shell\\QuickImageConvert";
+    CHECK(Contains(values, {verbKey, L"MUIVerb", L"Quick image format convert"}));
+}

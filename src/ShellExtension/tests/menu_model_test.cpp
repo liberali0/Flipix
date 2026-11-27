@@ -128,3 +128,21 @@ TEST(ConvertArguments_AsksCliToMoveOriginalsWhenEnabled) {
     CHECK_EQ(ConvertArguments("png", settings),
              (std::vector<std::wstring>{L"convert", L"--to", L"png", L"--move-source-to", L"D:\\\uC6D0\uBCF8"}));
 }
+
+TEST(ConvertArguments_AsksForEveryFrameWhenEnabled) {
+    QuickMenuSettings settings = DefaultQuickMenuSettings();
+    settings.allFrames = true;
+    CHECK_EQ(ConvertArguments("png", settings),
+             (std::vector<std::wstring>{L"convert", L"--to", L"png", L"--all-frames"}));
+    CHECK(qic::ParseQuickMenuSettings(R"({"allFrames":true})").allFrames);
+    CHECK(!qic::ParseQuickMenuSettings(R"({"allFrames":"yes"})").allFrames);
+}
+
+TEST(Menu_EnglishText) {
+    CHECK_EQ(RootTitle(true), std::wstring(L"Quick image format convert"));
+    CHECK_EQ(ConfiguredSubmenu(DefaultQuickMenuSettings(), true),
+             (std::vector<MenuItem>{Convert("png", L"to PNG"), Convert("jpg", L"to JPG (lossy)"), Convert("bmp", L"to BMP"),
+                                    Separator(), {MenuItemKind::Details, "", L"More..."}}));
+    CHECK_EQ(Titles(VisibleSubmenu(DefaultQuickMenuSettings(), {L"C:\\a\\1.png"}, true)),
+             (Paths{L"to JPG (lossy)", L"to BMP", L"---", L"More..."}));
+}

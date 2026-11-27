@@ -25,8 +25,12 @@ if(MSVC)
   #   /guard:cf       Control Flow Guard
   #   /CETCOMPAT      hardware shadow stack (Intel CET / AMD shadow stack)
   #   /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT  ASLR and DEP (explicit, so a toolchain change cannot drop them)
+  #   /CETCOMPAT is x86/x64 only, so the ARM64 build leaves it out (ARM64 has its own return-address protection).
   add_compile_options(/sdl /GS /guard:cf)
-  add_link_options(/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT /CETCOMPAT)
+  add_link_options(/guard:cf /DYNAMICBASE /HIGHENTROPYVA /NXCOMPAT)
+  if(NOT CMAKE_CXX_COMPILER_ARCHITECTURE_ID MATCHES "ARM")
+    add_link_options(/CETCOMPAT)
+  endif()
 else()
   add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wno-sign-conversion)
   if(WIN32)

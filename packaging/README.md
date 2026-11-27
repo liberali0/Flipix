@@ -36,6 +36,9 @@ dotnet publish src/ImageConverter.App -c Release -r win-x64 --self-contained -o 
 dotnet publish src/ImageConverter.Cli -c Release -r win-x64 --self-contained -o publish
 cmake -S src/ShellExtension -B build/shell -A x64; cmake --build build/shell --config Release
 Copy-Item build/shell/Release/ImageConverter.ShellExtension.dll publish/
+# 설치 마법사에는 ARM64 PC용 메뉴 DLL도 들어갑니다(ARM64 PC에서는 이 DLL을 원래 이름으로 설치).
+cmake -S src/ShellExtension -B build/shell-arm64 -A ARM64; cmake --build build/shell-arm64 --config Release --target ImageConverter.ShellExtension
+Copy-Item build/shell-arm64/Release/ImageConverter.ShellExtension.dll publish/ImageConverter.ShellExtension.arm64.dll
 ./packaging/New-DevCertificate.ps1 -Password pw   # 처음 한 번
 ./packaging/build-msix.ps1 -Version 1.0.0.0 -PublishDir publish -PfxPath packaging/out/ImageConverter.pfx -PfxPassword pw
 ```

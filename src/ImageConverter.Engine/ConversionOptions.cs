@@ -36,4 +36,16 @@ public sealed record ConversionOptions
 
     /// <summary>Behaviour when the output file exists. Default <see cref="ExistingFileBehavior.Rename"/>.</summary>
     public ExistingFileBehavior IfOutputExists { get; init; } = ExistingFileBehavior.Rename;
+
+    /// <summary>
+    /// For animated GIF/WebP: write every frame (as it appears on screen) into a folder
+    /// <c>&lt;name&gt;_frames</c> next to the output, as <c>&lt;name&gt;_001.png</c>, ... Default false: the first frame only.
+    /// </summary>
+    public bool AllFrames { get; init; }
+
+    /// <summary>Shrink (never enlarge) so that the longer side is at most this many pixels, keeping the aspect ratio. Null: keep the size.</summary>
+    public int? MaxSize { get; init; }
+
+    /// <summary>Shrink both sides to this percentage (1-99). Null or 100: keep the size. Ignored when <see cref="MaxSize"/> is set.</summary>
+    public int? ScalePercent { get; init; }
 }

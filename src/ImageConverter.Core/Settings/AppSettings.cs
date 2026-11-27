@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ImageConverter.Core.Batch;
+using ImageConverter.Core.Localization;
 
 namespace ImageConverter.Core.Settings;
 
@@ -25,6 +26,9 @@ public enum QuickNotify { Failures, Always }
 /// <summary>Flipix Workshop 화면 테마. System은 Windows 앱 모드(라이트/다크)를 따른다.</summary>
 public enum ThemePreference { System, Light, Dark }
 
+/// <summary>Flipix Workshop에서 변환할 때 크기: 그대로, 최대 크기(px), 비율(%).</summary>
+public enum ResizeMode { None, MaxSize, Percent }
+
 /// <summary>Flipix Workshop(앱)에서 변환이 끝난 원본 파일을 어떻게 할지.</summary>
 public enum OriginalFileAction { Keep, Move }
 
@@ -47,6 +51,16 @@ public sealed class AppSettings
     public string? OriginalMoveFolder { get; set; }
     /// <summary>새 버전 알림. Workshop을 열 때와, 우클릭 변환 뒤 하루 한 번(셸 확장이 읽음) 확인한다. 기본은 켬.</summary>
     public bool CheckForUpdates { get; set; } = true;
+    /// <summary>움직이는 GIF·WEBP를 변환할 때 모든 프레임을 각각 저장(우클릭 변환과 Workshop 공통, 셸 확장이 읽음). 기본은 첫 프레임만.</summary>
+    public bool AllFrames { get; set; }
+    /// <summary>Flipix Workshop: 크기 줄이기. 기본은 원본 크기 그대로.</summary>
+    public ResizeMode Resize { get; set; } = ResizeMode.None;
+    /// <summary>최대 크기(긴 쪽 픽셀).</summary>
+    public int ResizeMaxSize { get; set; } = 1920;
+    /// <summary>줄일 비율(%).</summary>
+    public int ResizePercent { get; set; } = 50;
+    /// <summary>화면 언어(Workshop과 우클릭 메뉴 공통, 셸 확장이 읽음). 기본은 Windows 표시 언어를 따른다.</summary>
+    public UiLanguage Language { get; set; } = UiLanguage.Auto;
 
     public int EffectiveParallelism =>
         MaxParallelism > 0 ? MaxParallelism : Math.Max(1, Environment.ProcessorCount / 2);

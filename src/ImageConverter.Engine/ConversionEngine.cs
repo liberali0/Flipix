@@ -89,6 +89,11 @@ public sealed class ConversionEngine : IImageConverter
                 return Fail(ConversionError.InvalidOptions, "JPEG quality must be between 1 and 100.");
             }
 
+            if (options.MaxSize is < 1 || options.ScalePercent is < 1 or > 100)
+            {
+                return Fail(ConversionError.InvalidOptions, "Max size must be at least 1 pixel and scale between 1 and 100 percent.");
+            }
+
             MagickColor background;
             try
             {
@@ -144,7 +149,7 @@ public sealed class ConversionEngine : IImageConverter
             Directory.CreateDirectory(Path.GetDirectoryName(output)!);
             _tempPath = Path.Combine(Path.GetDirectoryName(output)!, $".{Path.GetFileName(output)}.{Guid.NewGuid():N}.tmp");
 
-            if (_source == target)
+            if (_source == target && !Resizes())
             {
                 Report(ConversionStage.Writing, 0.5);
                 File.Copy(input, _tempPath);
@@ -153,11 +158,25 @@ public sealed class ConversionEngine : IImageConverter
                 return Result(ConversionStatus.Succeeded) with { OutputPath = output, IsLossless = true };
             }
 
-            using var image = new MagickImage();
-            image.Progress += OnMagickProgress;
-
             Report(ConversionStage.Reading, 0);
-            if (!TryRead(image, input, out var readError))
+            if (options.AllFrames && _source is ImageFormat.Gif or ImageFormat.WebP)
+            {
+                using var frames = TryReadFrames(input, out var framesError);
+                if (frames is null)
+                {
+                    return ct.IsCancellationRequested
+                        ? Result(ConversionStatus.Cancelled)
+                        : Fail(ConversionError.DecodeFailed, framesError);
+                }
+
+                if (frames.Count > 1)
+                {
+                    return WriteFrames(frames, output, background);
+                }
+            }
+
+            using var image = TryRead(input, out var readError);
+            if (image is null)
             {
                 return ct.IsCancellationRequested
                     ? Result(ConversionStatus.Cancelled)
@@ -202,13 +221,37 @@ public sealed class ConversionEngine : IImageConverter
             };
         }
 
-        private bool TryRead(MagickImage image, string input, out string error)
+        private MagickImage? TryRead(string input, out string error)
         {
             error = string.Empty;
             var format = ToMagick(_source!.Value);
+            var image = new MagickImage();
+            image.Progress += OnMagickProgress;
             try
             {
                 var settings = new MagickReadSettings { Format = format };
+                if (_source is ImageFormat.Gif)
+                {
+                    // A GIF frame can be smaller than the canvas; coalesce so the first frame looks as it does on screen.
+                    using var frames = TryReadFrames(input, out error);
+                    if (frames is null)
+                    {
+                        image.Dispose();
+                        return null;
+                    }
+
+                    if (frames.Count > 1)
+                    {
+                        _warnings.Add(ConversionWarning.ExtraFramesDropped);
+                    }
+
+                    image.Dispose();
+                    var first = (MagickImage)frames[0].Clone();
+                    first.ResetPage();
+                    first.Progress += OnMagickProgress;
+                    return first;
+                }
+
                 if (_source is ImageFormat.Tiff or ImageFormat.WebP or ImageFormat.Avif or ImageFormat.Heic)
                 {
                     using var frames = new MagickImageCollection();
@@ -223,12 +266,135 @@ public sealed class ConversionEngine : IImageConverter
                 }
 
                 image.Read(input, settings);
-                return true;
+                return image;
             }
             catch (MagickException e)
             {
                 error = e.Message;
-                return false;
+                image.Dispose();
+                return null;
+            }
+        }
+
+        /// <summary>Every frame of an animation, each drawn as it appears on screen (coalesced). Null on a decode error.</summary>
+        private MagickImageCollection? TryReadFrames(string input, out string error)
+        {
+            error = string.Empty;
+            var frames = new MagickImageCollection();
+            try
+            {
+                frames.Read(input, new MagickReadSettings { Format = ToMagick(_source!.Value) });
+                ct.ThrowIfCancellationRequested();
+                if (frames.Count > 1)
+                {
+                    frames.Coalesce();
+                }
+
+                return frames;
+            }
+            catch (MagickException e)
+            {
+                error = e.Message;
+                frames.Dispose();
+                return null;
+            }
+        }
+
+        /// <summary>Writes each frame to <c>&lt;output name&gt;_frames\&lt;output name&gt;_001.ext</c>, ...</summary>
+        private ConversionResult WriteFrames(MagickImageCollection frames, string output, MagickColor background)
+        {
+            var stem = Path.GetFileNameWithoutExtension(output);
+            var folder = Path.Combine(Path.GetDirectoryName(output)!, stem + "_frames");
+            if (Directory.Exists(folder) || File.Exists(folder))
+            {
+                switch (options.IfOutputExists)
+                {
+                    case ExistingFileBehavior.Skip:
+                        return Result(ConversionStatus.Skipped) with { OutputPath = null };
+                    case ExistingFileBehavior.Fail:
+                        return Fail(ConversionError.OutputExists, "The frames folder already exists.");
+                    case ExistingFileBehavior.Rename:
+                        folder = OutputPaths.NextFree(folder, p => Directory.Exists(p) || File.Exists(p));
+                        break;
+                }
+            }
+
+            var createdFolder = !Directory.Exists(folder);
+            Directory.CreateDirectory(folder);
+            var written = new List<string>();
+            var digits = Math.Max(3, frames.Count.ToString(System.Globalization.CultureInfo.InvariantCulture).Length);
+            var ext = _target.Extensions[0];
+            var verified = options.Verify && _target.IsLosslessOutput;
+            try
+            {
+                for (var i = 0; i < frames.Count; i++)
+                {
+                    ct.ThrowIfCancellationRequested();
+                    var frame = (MagickImage)frames[i];
+                    frame.ResetPage();
+                    Prepare(frame, background);
+                    var number = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture).PadLeft(digits, '0');
+                    var path = Path.Combine(folder, $"{stem}_{number}{ext}");
+                    var temp = Path.Combine(folder, $".{stem}_{number}{ext}.{Guid.NewGuid():N}.tmp");
+                    try
+                    {
+                        Encode(frame, temp);
+                        if (verified)
+                        {
+                            var check = PixelComparer.Compare(frame, temp, ToMagick(target));
+                            if (!check.Identical)
+                            {
+                                RemoveWritten(written, folder, createdFolder);
+                                return Fail(ConversionError.VerificationFailed, $"Frame {i + 1}: {check.DifferentPixels} pixels differ after writing.")
+                                    with { Verification = check };
+                            }
+                        }
+
+                        File.Move(temp, path, overwrite: true);
+                        written.Add(path);
+                    }
+                    finally
+                    {
+                        if (File.Exists(temp))
+                        {
+                            File.Delete(temp);
+                        }
+                    }
+
+                    Report(ConversionStage.Writing, 0.5 + 0.5 * (i + 1) / frames.Count);
+                }
+            }
+            catch (MagickException e) when (!ct.IsCancellationRequested)
+            {
+                RemoveWritten(written, folder, createdFolder);
+                return Fail(ConversionError.EncodeFailed, e.Message);
+            }
+            catch (OperationCanceledException)
+            {
+                RemoveWritten(written, folder, createdFolder);
+                throw;
+            }
+
+            Report(ConversionStage.Done, 1);
+            return Result(ConversionStatus.Succeeded) with
+            {
+                OutputPath = folder,
+                FrameCount = written.Count,
+                IsLossless = IsLossless(),
+                Verification = verified ? new PixelVerification(true, 0) : null,
+            };
+        }
+
+        private static void RemoveWritten(List<string> written, string folder, bool createdFolder)
+        {
+            foreach (var path in written)
+            {
+                try { File.Delete(path); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
+            }
+
+            if (createdFolder)
+            {
+                try { Directory.Delete(folder); } catch (Exception e) when (e is IOException or UnauthorizedAccessException) { }
             }
         }
 
@@ -258,6 +424,8 @@ public sealed class ConversionEngine : IImageConverter
                 // BMP has no orientation tag; rotating by the EXIF orientation is lossless and keeps the picture upright.
                 image.AutoOrient();
             }
+
+            Shrink(image);
 
             if (!options.PreserveMetadata)
             {
@@ -298,6 +466,43 @@ public sealed class ConversionEngine : IImageConverter
                 _warnings.Add(ConversionWarning.BitDepthReduced);
                 image.Depth = (uint)_target.MaxBitsPerChannel;
             }
+        }
+
+        private bool Resizes() => options.MaxSize is not null || options.ScalePercent is > 0 and < 100;
+
+        /// <summary>Makes the picture smaller when asked; never larger.</summary>
+        private void Shrink(MagickImage image)
+        {
+            uint width = image.Width, height = image.Height;
+            double factor;
+            if (options.MaxSize is { } max)
+            {
+                var longer = Math.Max(width, height);
+                if (longer <= max)
+                {
+                    return;
+                }
+
+                factor = (double)max / longer;
+            }
+            else if (options.ScalePercent is int percent and > 0 and < 100)
+            {
+                factor = percent / 100.0;
+            }
+            else
+            {
+                return;
+            }
+
+            var newWidth = (uint)Math.Max(1, Math.Round(width * factor, MidpointRounding.AwayFromZero));
+            var newHeight = (uint)Math.Max(1, Math.Round(height * factor, MidpointRounding.AwayFromZero));
+            if (newWidth == width && newHeight == height)
+            {
+                return;
+            }
+
+            image.Resize(new MagickGeometry(newWidth, newHeight) { IgnoreAspectRatio = true });
+            _warnings.Add(ConversionWarning.Resized);
         }
 
         private void Encode(MagickImage image, string path)
@@ -356,7 +561,8 @@ public sealed class ConversionEngine : IImageConverter
             _target.IsLosslessOutput && !_warnings.Any(w => w is ConversionWarning.BitDepthReduced
                 or ConversionWarning.AlphaFlattened
                 or ConversionWarning.ColorSpaceConverted
-                or ConversionWarning.ExtraFramesDropped);
+                or ConversionWarning.ExtraFramesDropped
+                or ConversionWarning.Resized);
 
         private void OnMagickProgress(object? sender, ProgressEventArgs e)
         {
@@ -375,7 +581,7 @@ public sealed class ConversionEngine : IImageConverter
             Status = status,
             SourceFormat = _source,
             TargetFormat = target,
-            Warnings = _warnings.ToArray(),
+            Warnings = _warnings.Distinct().ToArray(), // frames each add the same warnings
             Elapsed = _clock.Elapsed,
         };
 
@@ -413,6 +619,7 @@ public sealed class ConversionEngine : IImageConverter
         ImageFormat.WebP => MagickFormat.WebP,
         ImageFormat.Avif => MagickFormat.Avif,
         ImageFormat.Heic => MagickFormat.Heic,
+        ImageFormat.Gif => MagickFormat.Gif,
         _ => throw new ArgumentOutOfRangeException(nameof(format), format, null),
     };
 }

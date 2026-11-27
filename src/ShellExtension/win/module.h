@@ -39,6 +39,9 @@ std::optional<std::string> ReadSmallFile(const std::wstring& path, DWORD maxByte
 // The user's quick-menu settings (defaults when no settings file exists).
 QuickMenuSettings LoadSettings();
 
+// Whether menu and message text should be English (settings.language, else the Windows display language).
+bool EnglishUi(const QuickMenuSettings& settings);
+
 // True when the app last looked for a new version a day ago or more (see qic::IsUpdateCheckDue).
 bool UpdateCheckDue();
 

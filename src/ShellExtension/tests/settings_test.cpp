@@ -11,6 +11,8 @@ using qic::PackageFamilyNameFromFullName;
 using qic::ParseQuickMenuSettings;
 using qic::QuickMenuSettings;
 using qic::SettingsPathCandidates;
+using qic::UiLanguage;
+using qic::UseEnglish;
 
 using Formats = std::vector<std::string>;
 
@@ -162,4 +164,20 @@ TEST(ParseQuickMenuSettings_ReadsNotifyAndUpdateChecks) {
     CHECK(!ParseQuickMenuSettings(R"({"quickMenu":{"notify":true}})").notifySuccess);
     CHECK(ParseQuickMenuSettings(R"({"quickMenu":{"notify":"always"}})").checkForUpdates);
     CHECK(!ParseQuickMenuSettings(R"({"checkForUpdates":false})").checkForUpdates);
+}
+
+TEST(ParseQuickMenuSettings_ReadsLanguage) {
+    CHECK(ParseQuickMenuSettings(R"({"language":"english"})").language == UiLanguage::English);
+    CHECK(ParseQuickMenuSettings(R"({"language":"Korean"})").language == UiLanguage::Korean);
+    CHECK(ParseQuickMenuSettings(R"({"language":"auto"})").language == UiLanguage::Auto);
+    CHECK(ParseQuickMenuSettings(R"({"language":"klingon"})").language == UiLanguage::Auto);
+    CHECK(ParseQuickMenuSettings(R"({"language":1})").language == UiLanguage::Auto);
+    CHECK(DefaultQuickMenuSettings().language == UiLanguage::Auto);
+}
+
+TEST(UseEnglish_FollowsChoiceThenWindows) {
+    CHECK(!UseEnglish(UiLanguage::Auto, true));
+    CHECK(UseEnglish(UiLanguage::Auto, false));
+    CHECK(!UseEnglish(UiLanguage::Korean, false));
+    CHECK(UseEnglish(UiLanguage::English, true));
 }

@@ -42,8 +42,8 @@ private:
     HANDLE handle_ = nullptr;
 };
 
-void ShowMessage(const std::wstring& text, UINT icon) {
-    MessageBoxW(nullptr, text.c_str(), RootTitle().c_str(), MB_OK | icon | MB_SETFOREGROUND);
+void ShowMessage(const std::wstring& text, UINT icon, bool english) {
+    MessageBoxW(nullptr, text.c_str(), RootTitle(english).c_str(), MB_OK | icon | MB_SETFOREGROUND);
 }
 
 std::wstring UniqueName(std::wstring_view prefix) {
@@ -112,6 +112,7 @@ struct WatchContext {
     std::wstring followUpExe;
     bool notifySuccess = false;
     bool checkForUpdates = false;
+    bool english = false;
     std::size_t fileCount = 0;
     HMODULE pinnedModule = nullptr;
 };
@@ -142,7 +143,7 @@ DWORD WINAPI WatchProcess(void* parameter) {
     if (!context->responseFile.empty()) DeleteFileW(context->responseFile.c_str());
     if (exitCode != 0 && context->reportFailures) {
         const std::string stderrText = context->errors ? ReadFromStart(context->errors.Get()) : std::string();
-        ShowMessage(FormatFailureMessage(exitCode, stderrText), MB_ICONWARNING);
+        ShowMessage(FormatFailureMessage(exitCode, stderrText, 12, context->english), MB_ICONWARNING, context->english);
     }
     StartFollowUp(*context, exitCode == 0);
     HMODULE module = context->pinnedModule;
@@ -214,7 +215,10 @@ HRESULT Launch(const LaunchRequest& request) {
 
     const DWORD attributes = GetFileAttributesW(request.exePath.c_str());
     if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
-        ShowMessage(L"변환 프로그램을 찾을 수 없어요. 앱을 다시 설치해 주세요.\n\n" + request.exePath, MB_ICONERROR);
+        ShowMessage((request.english ? L"The converter was not found. Please reinstall Flipix.\n\n"
+                                     : L"변환 프로그램을 찾을 수 없어요. 앱을 다시 설치해 주세요.\n\n") +
+                        request.exePath,
+                    MB_ICONERROR, request.english);
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
     }
 
@@ -223,7 +227,9 @@ HRESULT Launch(const LaunchRequest& request) {
     const std::wstring responseFile = tempFolder.empty() ? std::wstring() : tempFolder + L"\\" + UniqueName(kSelectionFilePrefix);
     LaunchPlan plan = BuildLaunchPlan(request.exePath, request.leadingArgs, request.files, responseFile);
     if (plan.usesResponseFile && (responseFile.empty() || !WriteWholeFile(responseFile, plan.responseFileUtf8))) {
-        ShowMessage(L"선택한 파일 목록을 임시 폴더에 저장하지 못했어요.", MB_ICONERROR);
+        ShowMessage(request.english ? L"The list of selected files could not be saved to the temporary folder."
+                                    : L"선택한 파일 목록을 임시 폴더에 저장하지 못했어요.",
+                    MB_ICONERROR, request.english);
         return E_FAIL;
     }
 
@@ -246,8 +252,9 @@ HRESULT Launch(const LaunchRequest& request) {
 
     if (!started) {
         if (plan.usesResponseFile) DeleteFileW(responseFile.c_str());
-        ShowMessage(L"변환 프로그램을 시작하지 못했어요. (오류 " + std::to_wstring(error) + L")\n\n" + request.exePath,
-                    MB_ICONERROR);
+        ShowMessage((request.english ? L"The converter could not start. (error " : L"변환 프로그램을 시작하지 못했어요. (오류 ") +
+                        std::to_wstring(error) + L")\n\n" + request.exePath,
+                    MB_ICONERROR, request.english);
         return HRESULT_FROM_WIN32(error);
     }
     CloseHandle(process.hThread);
@@ -267,6 +274,7 @@ HRESULT Launch(const LaunchRequest& request) {
     context->followUpExe = request.followUpExe;
     context->notifySuccess = request.notifySuccess;
     context->checkForUpdates = request.checkForUpdates;
+    context->english = request.english;
     context->fileCount = request.files.size();
     // Keep this DLL loaded until the watcher exits, even if Explorer releases every object.
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, reinterpret_cast<LPCWSTR>(&WatchProcess),

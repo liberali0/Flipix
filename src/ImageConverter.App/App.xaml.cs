@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using ImageConverter.App.Services;
 using ImageConverter.App.ViewModels;
+using ImageConverter.Core.Localization;
 using ImageConverter.Core.Settings;
 using ImageConverter.Core.Updates;
 
@@ -23,6 +24,7 @@ public partial class App : Application
         var store = new SettingsStore();
         var settings = store.Load();
         ThemeService.Apply(settings.Theme);
+        Loc.Apply(settings.Language);
 
         // 우클릭 변환이 끝난 뒤 셸 확장이 부르는 모드: 창 없이 알림만 띄우고 스스로 끝난다.
         if (e.Args.Contains("--background"))
@@ -60,7 +62,8 @@ public partial class App : Application
             var at = Array.IndexOf(args, "--converted");
             if (at >= 0 && at + 1 < args.Length && int.TryParse(args[at + 1], out var converted) && converted > 0)
             {
-                var done = new NoticeWindow("빠른 변환 완료", $"{converted:N0}개 파일을 모두 변환했어요.");
+                var done = new NoticeWindow(Loc.T("빠른 변환 완료", "Quick convert done"),
+                    Loc.T($"{converted:N0}개 파일을 모두 변환했어요.", converted == 1 ? "The file was converted." : $"All {converted:N0} files were converted."));
                 done.CloseAfter(TimeSpan.FromSeconds(5));
                 notices.Add(done.ShowNotice());
             }
@@ -83,26 +86,26 @@ public partial class App : Application
 
     private static Task ShowUpdateNotice(UpdateInfo info)
     {
-        var notice = new NoticeWindow($"Flipix v{info.Version}이(가) 나왔어요",
-            "지금 업데이트할까요? 설치 위치와 설정은 그대로예요.");
-        notice.AddButton("업데이트", primary: true, async () =>
+        var notice = new NoticeWindow(Loc.T($"Flipix v{info.Version}이(가) 나왔어요", $"Flipix v{info.Version} is available"),
+            Loc.T("지금 업데이트할까요? 설치 위치와 설정은 그대로예요.", "Update now? Your install folder and settings stay the same."));
+        notice.AddButton(Loc.T("업데이트", "Update"), primary: true, async () =>
         {
             notice.SetButtonsEnabled(false);
             try
             {
-                var progress = new Progress<double>(p => notice.Message = $"내려받는 중… {p:0}%");
+                var progress = new Progress<double>(p => notice.Message = Loc.T($"내려받는 중… {p:0}%", $"Downloading… {p:0}%"));
                 var setup = await UpdateService.DownloadAsync(info, progress);
-                notice.Message = "업데이트를 시작해요.";
+                notice.Message = Loc.T("업데이트를 시작해요.", "Starting the update.");
                 UpdateService.LaunchInstaller(setup);
                 notice.Close();
             }
             catch (Exception ex)
             {
-                notice.Message = "업데이트하지 못했어요: " + ex.Message;
+                notice.Message = Loc.T("업데이트하지 못했어요: ", "Could not update: ") + ex.Message;
                 notice.SetButtonsEnabled(true);
             }
         });
-        notice.AddButton("나중에", primary: false, notice.Close);
+        notice.AddButton(Loc.T("나중에", "Later"), primary: false, notice.Close);
         return notice.ShowNotice();
     }
 
@@ -125,8 +128,9 @@ public partial class App : Application
         }
         catch { logPath = null; }
 
-        var detail = logPath is null ? ex.Message : $"{ex.Message}\n\n자세한 내용: {logPath}";
-        try { MessageBox.Show($"Flipix Workshop를 실행하는 중 문제가 생겼습니다.\n\n{detail}", "Flipix Workshop", MessageBoxButton.OK, MessageBoxImage.Error); }
+        var detail = logPath is null ? ex.Message : $"{ex.Message}\n\n{Loc.T("자세한 내용", "Details")}: {logPath}";
+        var text = Loc.T("Flipix Workshop를 실행하는 중 문제가 생겼습니다.", "Flipix Workshop ran into a problem.");
+        try { MessageBox.Show($"{text}\n\n{detail}", "Flipix Workshop", MessageBoxButton.OK, MessageBoxImage.Error); }
         catch { }
     }
 

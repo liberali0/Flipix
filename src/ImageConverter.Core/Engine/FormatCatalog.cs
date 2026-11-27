@@ -1,17 +1,23 @@
+using ImageConverter.Core.Localization;
+
 namespace ImageConverter.Core.Engine;
 
 /// <summary>변환 대상(출력) 포맷 정보. HEIC는 입력 전용, GIF는 무손실 보장이 안 되어 제외. 우클릭 메뉴/앱 UI가 같은 목록을 쓴다.</summary>
-public sealed record FormatInfo(string Id, string Extension, string Display, bool IsLossy);
+public sealed record FormatInfo(string Id, string Extension, string KoreanDisplay, bool IsLossy, string? EnglishDisplay = null)
+{
+    /// <summary>화면에 보이는 이름(현재 화면 언어).</summary>
+    public string Display => Loc.T(KoreanDisplay, EnglishDisplay ?? KoreanDisplay);
+}
 
 public static class FormatCatalog
 {
     public static IReadOnlyList<FormatInfo> All { get; } = new[]
     {
         new FormatInfo("png",  ".png",  "PNG",  false),
-        new FormatInfo("jpg",  ".jpg",  "JPG (손실 압축)", true),
+        new FormatInfo("jpg",  ".jpg",  "JPG (손실 압축)", true, "JPG (lossy)"),
         new FormatInfo("bmp",  ".bmp",  "BMP",  false),
-        new FormatInfo("webp", ".webp", "WEBP (무손실)", false),
-        new FormatInfo("avif", ".avif", "AVIF (무손실)", false),
+        new FormatInfo("webp", ".webp", "WEBP (무손실)", false, "WEBP (lossless)"),
+        new FormatInfo("avif", ".avif", "AVIF (무손실)", false, "AVIF (lossless)"),
         new FormatInfo("tiff", ".tif",  "TIFF", false),
     };
 
