@@ -89,6 +89,11 @@ public sealed class ConversionEngine : IImageConverter
                 return Fail(ConversionError.InvalidOptions, "JPEG quality must be between 1 and 100.");
             }
 
+            if (options.MaxSize is < 1 || options.ScalePercent is < 1 or > 100)
+            {
+                return Fail(ConversionError.InvalidOptions, "Max size must be at least 1 pixel and scale between 1 and 100 percent.");
+            }
+
             MagickColor background;
             try
             {
@@ -144,7 +149,7 @@ public sealed class ConversionEngine : IImageConverter
             Directory.CreateDirectory(Path.GetDirectoryName(output)!);
             _tempPath = Path.Combine(Path.GetDirectoryName(output)!, $".{Path.GetFileName(output)}.{Guid.NewGuid():N}.tmp");
 
-            if (_source == target)
+            if (_source == target && !Resizes())
             {
                 Report(ConversionStage.Writing, 0.5);
                 File.Copy(input, _tempPath);
@@ -420,6 +425,8 @@ public sealed class ConversionEngine : IImageConverter
                 image.AutoOrient();
             }
 
+            Shrink(image);
+
             if (!options.PreserveMetadata)
             {
                 image.Strip();
@@ -459,6 +466,43 @@ public sealed class ConversionEngine : IImageConverter
                 _warnings.Add(ConversionWarning.BitDepthReduced);
                 image.Depth = (uint)_target.MaxBitsPerChannel;
             }
+        }
+
+        private bool Resizes() => options.MaxSize is not null || options.ScalePercent is > 0 and < 100;
+
+        /// <summary>Makes the picture smaller when asked; never larger.</summary>
+        private void Shrink(MagickImage image)
+        {
+            uint width = image.Width, height = image.Height;
+            double factor;
+            if (options.MaxSize is { } max)
+            {
+                var longer = Math.Max(width, height);
+                if (longer <= max)
+                {
+                    return;
+                }
+
+                factor = (double)max / longer;
+            }
+            else if (options.ScalePercent is int percent and > 0 and < 100)
+            {
+                factor = percent / 100.0;
+            }
+            else
+            {
+                return;
+            }
+
+            var newWidth = (uint)Math.Max(1, Math.Round(width * factor, MidpointRounding.AwayFromZero));
+            var newHeight = (uint)Math.Max(1, Math.Round(height * factor, MidpointRounding.AwayFromZero));
+            if (newWidth == width && newHeight == height)
+            {
+                return;
+            }
+
+            image.Resize(new MagickGeometry(newWidth, newHeight) { IgnoreAspectRatio = true });
+            _warnings.Add(ConversionWarning.Resized);
         }
 
         private void Encode(MagickImage image, string path)
@@ -517,7 +561,8 @@ public sealed class ConversionEngine : IImageConverter
             _target.IsLosslessOutput && !_warnings.Any(w => w is ConversionWarning.BitDepthReduced
                 or ConversionWarning.AlphaFlattened
                 or ConversionWarning.ColorSpaceConverted
-                or ConversionWarning.ExtraFramesDropped);
+                or ConversionWarning.ExtraFramesDropped
+                or ConversionWarning.Resized);
 
         private void OnMagickProgress(object? sender, ProgressEventArgs e)
         {

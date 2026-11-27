@@ -11,6 +11,10 @@ public sealed record ConversionOptions
     public bool Verify { get; init; }
     /// <summary>움직이는 GIF·WEBP: 모든 프레임을 "이름_frames" 폴더에 각각 저장한다. 끄면 첫 프레임만.</summary>
     public bool AllFrames { get; init; }
+    /// <summary>긴 쪽이 이 픽셀을 넘지 않게 줄인다(비율 유지, 키우지 않음). null이면 그대로.</summary>
+    public int? MaxSize { get; init; }
+    /// <summary>가로·세로를 이 비율(1~100%)로 줄인다. null이면 그대로.</summary>
+    public int? ScalePercent { get; init; }
 }
 
 public sealed record ConversionRequest(

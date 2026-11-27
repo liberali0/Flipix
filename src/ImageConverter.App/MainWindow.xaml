@@ -163,6 +163,28 @@
                                        Text="JPG는 손실 압축이라 품질 100으로 저장해도 원본과 완전히 같지 않을 수 있어요."
                                        Visibility="{Binding LossyWarning, Converter={StaticResource BoolToVis}}" />
 
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="크기" />
+                            <ComboBox ItemsSource="{Binding ResizeChoices}" DisplayMemberPath="Label"
+                                      SelectedValuePath="Value" SelectedValue="{Binding Resize}" />
+                            <StackPanel Visibility="{Binding ResizeByMaxSize, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <TextBlock Text="최대 크기:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBox Text="{Binding ResizeMaxSize, UpdateSourceTrigger=PropertyChanged}" Width="72"
+                                             VerticalContentAlignment="Center" />
+                                    <TextBlock Text="px (비율 유지)" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Hint}" Text="가로와 세로 중 큰 쪽이 이 크기를 넘지 않게 줄여요. 더 작은 이미지는 그대로 둬요." />
+                            </StackPanel>
+                            <StackPanel Visibility="{Binding ResizeByPercent, Converter={StaticResource BoolToVis}}">
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                    <TextBlock Text="비율:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBox Text="{Binding ResizePercent, UpdateSourceTrigger=PropertyChanged}" Width="56"
+                                             VerticalContentAlignment="Center" />
+                                    <TextBlock Text="%" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Hint}" Text="가로와 세로를 같은 비율로 줄여요(1~100%)." />
+                            </StackPanel>
+
                             <TextBlock Style="{StaticResource FieldLabel}" Text="저장 위치" />
                             <ComboBox ItemsSource="{Binding SaveLocationChoices}" DisplayMemberPath="Label"
                                       SelectedValuePath="Value" SelectedValue="{Binding UseCustomFolder}" />
