@@ -40,7 +40,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 DisableProgramGroupPage=yes
-; 설치 위치 화면은 [Code]의 ShouldSkipPage가 정합니다: 새로 설치할 때와 "수정 > 설치 위치 변경"일 때만 보입니다.
+; 설치 위치 화면은 [Code]의 ShouldSkipPage가 정합니다: 새로 설치할 때와 "수정 > 설치 위치 변경"일 때만 보입니다. 업데이트는 "업데이트" 확인 화면 하나만 보입니다.
 DisableDirPage=no
 CloseApplications=yes
 ; 업데이트할 때 닫을 프로그램은 앱·CLI(exe)만 찾습니다. 우클릭 메뉴 DLL은 탐색기가 물고 있어서
@@ -66,6 +66,15 @@ english.ModifyDesc=Choose what to do with the installed {#AppName}.
 english.ModifyRepair=Repair (reinstall in the current location, keeping your settings)
 english.ModifyMove=Change the install location
 english.ModifyNested=Choose a folder that is not inside the current install folder (or the other way around).
+english.UpdTitle=Update {#AppName}
+english.UpdReadyTitle=Ready to update
+english.UpdReadyDesc={#AppName} is already installed. Only the update will be installed.
+english.UpdReadyMemo=Update {#AppName} %1 to %2.%n%nYour settings and right-click menu stay the same.
+english.UpdButton=&Update
+english.UpdInstallingTitle=Updating
+english.UpdInstallingDesc=Please wait while {#AppName} is updated to %1.
+english.UpdDoneTitle=Update complete
+english.UpdDoneText={#AppName} has been updated to %1.
 #if FileExists(KoreanIsl)
 korean.TaskContextMenu=우클릭 메뉴에 "빠른 이미지 포맷 변환" 추가
 korean.TaskContextMenuNote=Windows 11에서는 첫 화면에 나타납니다(인증서 신뢰 등록에 관리자 확인 한 번 필요, 거절하면 "더 많은 옵션 표시" 안).
@@ -77,6 +86,15 @@ korean.ModifyDesc=설치된 {#AppName}를 어떻게 할지 고르세요.
 korean.ModifyRepair=복구 (지금 위치에 다시 설치, 설정은 그대로)
 korean.ModifyMove=설치 위치 변경
 korean.ModifyNested=지금 설치 폴더 안쪽(또는 바깥쪽 상위 폴더)이 아닌 다른 폴더를 고르세요.
+korean.UpdTitle={#AppName} 업데이트
+korean.UpdReadyTitle=업데이트 준비 완료
+korean.UpdReadyDesc={#AppName}가 이미 설치돼 있어서 업데이트만 진행합니다.
+korean.UpdReadyMemo={#AppName} %1 → %2 업데이트%n%n설정과 우클릭 메뉴는 그대로 유지됩니다.
+korean.UpdButton=업데이트(&U)
+korean.UpdInstallingTitle=업데이트하는 중
+korean.UpdInstallingDesc={#AppName}를 %1(으)로 업데이트하고 있습니다. 잠시 기다려 주세요.
+korean.UpdDoneTitle=업데이트 완료
+korean.UpdDoneText={#AppName}가 %1(으)로 업데이트되었습니다.
 #endif
 
 [Tasks]
@@ -141,6 +159,7 @@ var
   ModifyPage: TInputOptionWizardPage;
   UserLinkExisted: Boolean;
   Migrating: Boolean;    // 예전 기본 폴더(QuickImageConverter)에서 Flipix 폴더로 옮기는 업데이트
+  OldVersion: string;    // 지금 설치된 버전(업데이트 화면에 표시)
 
 function HasParam(Name: string): Boolean;
 var
@@ -199,6 +218,8 @@ begin
     (CompareText(ExtractFileName(RemoveBackslashUnlessRoot(OldDir)), 'QuickImageConverter') = 0);
   if Migrating then
     WizardForm.DirEdit.Text := AddBackslash(ExtractFileDir(RemoveBackslashUnlessRoot(OldDir))) + 'Flipix';
+  if not RegQueryStringValue(HKA, UninstKey, 'DisplayVersion', OldVersion) then OldVersion := '?';
+  if IsUpgrade and not IsModify then WizardForm.Caption := CustomMessage('UpdTitle');
   ModifyPage := CreateInputOptionPage(wpWelcome, CustomMessage('ModifyTitle'), CustomMessage('ModifyDesc'), '', True, False);
   ModifyPage.Add(CustomMessage('ModifyRepair'));
   ModifyPage.Add(CustomMessage('ModifyMove'));
@@ -217,8 +238,33 @@ begin
     else if PageID = wpSelectTasks then Result := True;
   end
   else if IsUpgrade then
-    // 업데이트: 아무것도 묻지 않고 바로 설치합니다.
-    Result := (PageID = wpSelectDir) or (PageID = wpSelectTasks) or (PageID = wpReady);
+    // 업데이트: 위치·추가 작업은 묻지 않고, "업데이트" 확인 화면 하나만 보여 줍니다(조용한 실행은 화면 없음).
+    Result := (PageID = wpSelectDir) or (PageID = wpSelectTasks);
+end;
+
+// 업데이트일 때는 새로 설치할 때와 구분되도록 제목·단추·완료 문구를 "업데이트"로 바꾸고 버전을 보여 줍니다.
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if not IsUpgrade or IsModify then exit;
+  if CurPageID = wpReady then
+  begin
+    WizardForm.PageNameLabel.Caption := CustomMessage('UpdReadyTitle');
+    WizardForm.PageDescriptionLabel.Caption := CustomMessage('UpdReadyDesc');
+    WizardForm.ReadyLabel.Visible := False;
+    WizardForm.ReadyMemo.Visible := True;
+    WizardForm.ReadyMemo.Lines.Text := FmtMessage(CustomMessage('UpdReadyMemo'), [OldVersion, '{#AppVersion}']);
+    WizardForm.NextButton.Caption := CustomMessage('UpdButton');
+  end
+  else if CurPageID = wpInstalling then
+  begin
+    WizardForm.PageNameLabel.Caption := CustomMessage('UpdInstallingTitle');
+    WizardForm.PageDescriptionLabel.Caption := FmtMessage(CustomMessage('UpdInstallingDesc'), ['{#AppVersion}']);
+  end
+  else if CurPageID = wpFinished then
+  begin
+    WizardForm.FinishedHeadingLabel.Caption := CustomMessage('UpdDoneTitle');
+    WizardForm.FinishedLabel.Caption := FmtMessage(CustomMessage('UpdDoneText'), ['{#AppVersion}']);
+  end;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
