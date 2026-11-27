@@ -156,6 +156,9 @@ std::vector<std::string> TakeLog() {
 
 void ClearSettings() {
     DeleteFileW((Env().localAppData + L"\\QuickImageConverter\\settings.json").c_str());
+    // A fresh update stamp: no follow-up app start after a conversion, so the log holds only the CLI call.
+    CreateDirectoryW((Env().localAppData + L"\\QuickImageConverter").c_str(), nullptr);
+    WriteFileUtf8(Env().localAppData + L"\\QuickImageConverter\\update-check.stamp", "now");
 }
 
 void WriteSettings(const std::string& json) {
