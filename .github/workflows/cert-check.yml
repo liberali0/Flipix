@@ -17,7 +17,7 @@ jobs:
           if (-not $env:SIGN_PFX_PASSWORD) { throw "SIGN_PFX_PASSWORD is empty" }
           $bytes = [Convert]::FromBase64String($env:SIGN_PFX_BASE64)
           $flags = [Security.Cryptography.X509Certificates.X509KeyStorageFlags]::EphemeralKeySet
-          $c = New-Object Security.Cryptography.X509Certificates.X509Certificate2(,$bytes, $env:SIGN_PFX_PASSWORD, $flags)
+          $c = [Security.Cryptography.X509Certificates.X509Certificate2]::new([byte[]]$bytes, $env:SIGN_PFX_PASSWORD, $flags)
           "Subject: $($c.Subject)"; "Thumbprint: $($c.Thumbprint)"; "NotAfter: $($c.NotAfter)"; "HasPrivateKey: $($c.HasPrivateKey)"
           "CodeSigning: $(($c.Extensions | Where-Object { $_.Oid.Value -eq '2.5.29.37' }).Format($false))"
           if (-not $c.HasPrivateKey) { throw "no private key" }
