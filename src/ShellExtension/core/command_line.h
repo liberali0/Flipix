@@ -30,7 +30,8 @@ LaunchPlan BuildLaunchPlan(std::wstring_view exePath,
 
 // Message box text for a CLI run that exited with a non-zero code. stderrUtf8 holds the CLI's
 // "ERROR <path>: <message>" lines; at most maxLines of them are shown.
-std::wstring FormatFailureMessage(unsigned long exitCode, std::string_view stderrUtf8, std::size_t maxLines = 12);
+std::wstring FormatFailureMessage(unsigned long exitCode, std::string_view stderrUtf8, std::size_t maxLines = 12,
+                                  bool english = false);
 
 // Temporary files the menu writes to %TEMP%\QuickImageConverter: "<prefix><guid>.txt".
 inline constexpr std::wstring_view kSelectionFilePrefix = L"selection-";

@@ -1,8 +1,9 @@
 <Window x:Class="ImageConverter.App.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:ImageConverter.App"
         Icon="pack://application:,,,/Assets/flipix.ico"
-        Title="빠른 변환 설정" Width="480" SizeToContent="Height" ResizeMode="NoResize"
+        Title="{l:T '빠른 변환 설정', 'Quick convert settings'}" Width="480" SizeToContent="Height" ResizeMode="NoResize"
         Background="{DynamicResource Flx.Bg}" Foreground="{DynamicResource Flx.Fg}"
         FontFamily="Segoe UI Variable Text, Segoe UI, Malgun Gothic" FontSize="13"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
@@ -24,16 +25,16 @@
                 </LinearGradientBrush>
             </Border.Background>
             <StackPanel TextElement.Foreground="White">
-                <TextBlock Text="⚡ 빠른 변환 설정" FontSize="17" FontWeight="Bold" />
+                <TextBlock Text="{l:T '⚡ 빠른 변환 설정', '⚡ Quick convert settings'}" FontSize="17" FontWeight="Bold" />
                 <TextBlock TextWrapping="Wrap" Opacity="0.88" Margin="0,4,0,0"
-                           Text="이미지를 우클릭하고 [빠른 이미지 포맷 변환]을 누르면 바로 보일 형식을 고르세요. 나머지는 [자세히]에서 고를 수 있어요." />
+                           Text="{l:T '이미지를 우클릭하고 [빠른 이미지 포맷 변환]을 누르면 바로 보일 형식을 고르세요. 나머지는 [자세히]에서 고를 수 있어요.', 'Choose the formats shown right away when you right-click images and open [Quick image format convert]. Other formats are under [More].'}" />
             </StackPanel>
         </Border>
 
         <StackPanel Margin="16">
             <Border Style="{StaticResource Flx.CardPanel}" Padding="16,4,16,12">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Flx.Label}" Text="우클릭 메뉴에 바로 보일 형식" />
+                    <TextBlock Style="{StaticResource Flx.Label}" Text="{l:T '우클릭 메뉴에 바로 보일 형식', 'Formats in the right-click menu'}" />
                     <ItemsControl x:Name="FormatList">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><UniformGrid Columns="2" /></ItemsPanelTemplate>
@@ -49,25 +50,25 @@
 
             <Border Style="{StaticResource Flx.CardPanel}" Padding="16,4,16,12" Margin="0,12,0,0">
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Flx.Label}" Text="변환이 끝난 원본 파일" />
-                    <RadioButton x:Name="KeepOriginal" GroupName="Original" Content="그대로 남기기" Margin="0,2" />
-                    <RadioButton x:Name="RecycleOriginal" GroupName="Original" Content="휴지통으로 보내기" Margin="0,2" />
+                    <TextBlock Style="{StaticResource Flx.Label}" Text="{l:T '변환이 끝난 원본 파일', 'Originals after converting'}" />
+                    <RadioButton x:Name="KeepOriginal" GroupName="Original" Content="{l:T '그대로 남기기', 'Keep'}" Margin="0,2" />
+                    <RadioButton x:Name="RecycleOriginal" GroupName="Original" Content="{l:T '휴지통으로 보내기', 'Move to Recycle Bin'}" Margin="0,2" />
                     <TextBlock Style="{StaticResource Hint}"
-                               Text="변환에 성공한 파일만 지워요. 무손실 형식은 픽셀이 모두 같은지 확인한 뒤 지우고, 실패하거나 이미 같은 형식인 파일은 남겨요. 휴지통에서 되살릴 수 있어요." />
-                    <RadioButton x:Name="MoveOriginalRadio" GroupName="Original" Content="지정 폴더로 옮기기" Margin="0,2" />
+                               Text="{l:T '변환에 성공한 파일만 지워요. 무손실 형식은 픽셀이 모두 같은지 확인한 뒤 지우고, 실패하거나 이미 같은 형식인 파일은 남겨요. 휴지통에서 되살릴 수 있어요.', 'Only files that converted successfully are removed. For lossless formats the pixels are checked first. Failed files and files already in that format stay. You can restore them from the Recycle Bin.'}" />
+                    <RadioButton x:Name="MoveOriginalRadio" GroupName="Original" Content="{l:T '지정 폴더로 옮기기', 'Move to a folder'}" Margin="0,2" />
                     <DockPanel Margin="28,4,0,0" IsEnabled="{Binding IsChecked, ElementName=MoveOriginalRadio}">
-                        <Button DockPanel.Dock="Right" Style="{StaticResource Flx.Button}" Content="찾기" Click="OnBrowseMoveFolder"
+                        <Button DockPanel.Dock="Right" Style="{StaticResource Flx.Button}" Content="{l:T '찾기', 'Browse'}" Click="OnBrowseMoveFolder"
                                 Margin="6,0,0,0" Padding="12,5" />
                         <TextBox x:Name="MoveFolder" VerticalContentAlignment="Center" />
                     </DockPanel>
                     <TextBlock Style="{StaticResource Hint}" Margin="28,4,0,0"
-                               Text="변환에 성공한 파일만 옮겨요. 폴더에 같은 이름이 있으면 번호를 붙여 덮어쓰지 않아요." />
+                               Text="{l:T '변환에 성공한 파일만 옮겨요. 폴더에 같은 이름이 있으면 번호를 붙여 덮어쓰지 않아요.', 'Only files that converted successfully are moved. Files with the same name get a number instead of being overwritten.'}" />
                 </StackPanel>
             </Border>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-                <Button Style="{StaticResource Flx.Button}" Content="취소" Width="84" IsCancel="True" />
-                <Button Style="{StaticResource Flx.PrimaryButton}" Content="저장" Width="84" IsDefault="True" Click="OnSave" Margin="0" />
+                <Button Style="{StaticResource Flx.Button}" Content="{l:T '취소', 'Cancel'}" Width="84" IsCancel="True" />
+                <Button Style="{StaticResource Flx.PrimaryButton}" Content="{l:T '저장', 'Save'}" Width="84" IsDefault="True" Click="OnSave" Margin="0" />
             </StackPanel>
         </StackPanel>
     </StackPanel>

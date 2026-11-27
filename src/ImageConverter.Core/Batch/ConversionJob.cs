@@ -1,3 +1,5 @@
+using ImageConverter.Core.Localization;
+
 namespace ImageConverter.Core.Batch;
 
 public enum JobStatus { Pending, Running, Succeeded, Failed, Skipped, Canceled }
@@ -31,12 +33,12 @@ public sealed class ConversionJob : ObservableObject
 
     public string StatusText => Status switch
     {
-        JobStatus.Pending => "대기",
-        JobStatus.Running => "변환 중",
-        JobStatus.Succeeded => "완료",
-        JobStatus.Failed => "실패",
-        JobStatus.Skipped => "건너뜀",
-        JobStatus.Canceled => "취소됨",
+        JobStatus.Pending => Loc.T("대기", "Waiting"),
+        JobStatus.Running => Loc.T("변환 중", "Converting"),
+        JobStatus.Succeeded => Loc.T("완료", "Done"),
+        JobStatus.Failed => Loc.T("실패", "Failed"),
+        JobStatus.Skipped => Loc.T("건너뜀", "Skipped"),
+        JobStatus.Canceled => Loc.T("취소됨", "Canceled"),
         _ => "",
     };
 

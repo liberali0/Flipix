@@ -62,12 +62,13 @@ LaunchPlan BuildLaunchPlan(std::wstring_view exePath,
     return plan;
 }
 
-std::wstring FormatFailureMessage(unsigned long exitCode, std::string_view stderrUtf8, std::size_t maxLines) {
+std::wstring FormatFailureMessage(unsigned long exitCode, std::string_view stderrUtf8, std::size_t maxLines,
+                                  bool english) {
     std::wstring message;
     switch (exitCode) {
-        case 1: message = L"일부 파일을 변환하지 못했어요."; break;
-        case 2: message = L"변환을 시작하지 못했어요."; break;
-        default: message = L"변환 중 문제가 생겼어요."; break;
+        case 1: message = english ? L"Some files could not be converted." : L"일부 파일을 변환하지 못했어요."; break;
+        case 2: message = english ? L"The conversion could not start." : L"변환을 시작하지 못했어요."; break;
+        default: message = english ? L"Something went wrong during the conversion." : L"변환 중 문제가 생겼어요."; break;
     }
 
     std::vector<std::wstring> lines;
@@ -81,11 +82,16 @@ std::wstring FormatFailureMessage(unsigned long exitCode, std::string_view stder
         start = newline + 1;
     }
 
-    if (lines.empty()) return message + L"\n\n(종료 코드 " + std::to_wstring(exitCode) + L")";
+    if (lines.empty()) {
+        return message + (english ? L"\n\n(exit code " : L"\n\n(종료 코드 ") + std::to_wstring(exitCode) + L")";
+    }
 
     message += L"\n";
     for (std::size_t i = 0; i < lines.size() && i < maxLines; ++i) message += L"\n" + lines[i];
-    if (lines.size() > maxLines) message += L"\n… 외 " + std::to_wstring(lines.size() - maxLines) + L"개";
+    if (lines.size() > maxLines) {
+        const std::wstring more = std::to_wstring(lines.size() - maxLines);
+        message += english ? L"\n… and " + more + L" more" : L"\n… 외 " + more + L"개";
+    }
     return message;
 }
 

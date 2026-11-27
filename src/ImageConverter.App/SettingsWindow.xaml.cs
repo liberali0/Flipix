@@ -2,6 +2,7 @@ using System.Windows;
 using ImageConverter.App.Services;
 using ImageConverter.Core;
 using ImageConverter.Core.Engine;
+using ImageConverter.Core.Localization;
 using ImageConverter.Core.Settings;
 using Microsoft.Win32;
 
@@ -48,7 +49,7 @@ public partial class SettingsWindow : Window
 
     private void OnBrowseMoveFolder(object sender, RoutedEventArgs e)
     {
-        var dlg = new OpenFolderDialog { Title = "변환이 끝난 원본을 옮길 폴더" };
+        var dlg = new OpenFolderDialog { Title = Loc.T("변환이 끝난 원본을 옮길 폴더", "Folder for converted originals") };
         if (dlg.ShowDialog(this) == true)
         {
             MoveFolder.Text = dlg.FolderName;
@@ -61,14 +62,14 @@ public partial class SettingsWindow : Window
         SelectedFormats = _toggles.Where(t => t.IsChecked).Select(t => t.Format.Id).ToList();
         if (SelectedFormats.Count == 0)
         {
-            MessageBox.Show(this, "하나 이상 선택하세요.", Title, MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, Loc.T("하나 이상 선택하세요.", "Choose at least one."), Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         var folder = MoveFolder.Text.Trim();
         MoveOriginal = MoveOriginalRadio.IsChecked == true;
         if (MoveOriginal && (folder.Length == 0 || !System.IO.Path.IsPathFullyQualified(folder)))
         {
-            MessageBox.Show(this, "원본을 옮길 폴더를 전체 경로(예: D:\\원본 보관)로 지정하세요.", Title, MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show(this, Loc.T("원본을 옮길 폴더를 전체 경로(예: D:\\원본 보관)로 지정하세요.", "Enter the full path of the folder for originals (for example D:\\Originals)."), Title, MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
         DeleteOriginal = RecycleOriginal.IsChecked == true;

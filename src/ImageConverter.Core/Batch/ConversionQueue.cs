@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using ImageConverter.Core.Engine;
+using ImageConverter.Core.Localization;
 
 namespace ImageConverter.Core.Batch;
 
@@ -92,7 +93,7 @@ public sealed class ConversionQueue
 
             if (outPath is null)
             {
-                job.Message = "같은 이름의 파일이 있어 건너뜀";
+                job.Message = Loc.T("같은 이름의 파일이 있어 건너뜀", "Skipped: a file with the same name exists");
                 job.Status = JobStatus.Skipped;
                 return;
             }
@@ -126,14 +127,14 @@ public sealed class ConversionQueue
                 job.Progress = 100;
                 if (result.WrittenPath != null) { outPath = result.WrittenPath; job.OutputPath = outPath; }
                 job.Message = JoinMessage(result.Note, result.KeepSource && !string.IsNullOrWhiteSpace(o.MoveSourceTo)
-                    ? "원본은 그대로 둠(첫 프레임만 변환)"
+                    ? Loc.T("원본은 그대로 둠(첫 프레임만 변환)", "Original kept (only the first frame was converted)")
                     : MoveSource(job, outPath, o.MoveSourceTo));
                 job.Status = JobStatus.Succeeded;
             }
             else
             {
                 TryDeletePartial(outPath, existedBefore);
-                Fail(job, result.ErrorMessage ?? "알 수 없는 오류");
+                Fail(job, result.ErrorMessage ?? Loc.T("알 수 없는 오류", "Unknown error"));
             }
         }
         finally
@@ -149,16 +150,16 @@ public sealed class ConversionQueue
         if (string.IsNullOrWhiteSpace(folder)) return null;
         if (string.Equals(Path.GetFullPath(job.InputPath), Path.GetFullPath(outPath), StringComparison.OrdinalIgnoreCase)
             || !(File.Exists(outPath) || Directory.Exists(outPath)))
-            return "원본은 그대로 둠(결과 파일을 확인하지 못함)";
+            return Loc.T("원본은 그대로 둠(결과 파일을 확인하지 못함)", "Original kept (the result file could not be found)");
         try
         {
             var moved = SourceMover.MoveToFolder(job.InputPath, folder);
             job.MovedSourcePath = moved;
-            return "원본 이동: " + moved;
+            return Loc.T("원본 이동: ", "Original moved: ") + moved;
         }
         catch (Exception ex)
         {
-            return "원본을 옮기지 못함: " + ex.Message;
+            return Loc.T("원본을 옮기지 못함: ", "Could not move the original: ") + ex.Message;
         }
     }
 

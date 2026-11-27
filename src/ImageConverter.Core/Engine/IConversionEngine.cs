@@ -1,3 +1,5 @@
+using ImageConverter.Core.Localization;
+
 namespace ImageConverter.Core.Engine;
 
 public sealed record ConversionOptions
@@ -49,5 +51,5 @@ public sealed class UnavailableEngine : IConversionEngine
     public IReadOnlyCollection<string> SupportedInputExtensions => FormatCatalog.DefaultInputExtensions;
 
     public Task<ConversionResult> ConvertAsync(ConversionRequest request, IProgress<double>? progress, CancellationToken ct)
-        => Task.FromResult(ConversionResult.Fail("변환 엔진이 아직 연결되지 않았습니다."));
+        => Task.FromResult(ConversionResult.Fail(Loc.T("변환 엔진이 아직 연결되지 않았습니다.", "The conversion engine is not available.")));
 }

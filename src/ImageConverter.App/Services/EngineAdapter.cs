@@ -1,4 +1,5 @@
 using ImageConverter.Core.Engine;
+using ImageConverter.Core.Localization;
 using Engine = ImageConverter.Engine;
 
 namespace ImageConverter.App.Services;
@@ -23,7 +24,7 @@ public sealed class EngineAdapter : IConversionEngine
     public async Task<ConversionResult> ConvertAsync(ConversionRequest request, IProgress<double>? progress, CancellationToken ct)
     {
         if (!Engine.ImageFormats.TryParse(request.TargetFormat, out var target))
-            return ConversionResult.Fail($"지원하지 않는 형식: {request.TargetFormat}");
+            return ConversionResult.Fail(Loc.T($"지원하지 않는 형식: {request.TargetFormat}", $"Unsupported format: {request.TargetFormat}"));
 
         var options = new Engine.ConversionOptions
         {
@@ -66,14 +67,14 @@ public sealed class EngineAdapter : IConversionEngine
 
     private static string DescribeError(Engine.ConversionResult r) => r.Error switch
     {
-        Engine.ConversionError.InputNotFound => "원본 파일을 찾을 수 없습니다.",
-        Engine.ConversionError.UnsupportedInputFormat => "지원하지 않는 이미지 형식입니다.",
-        Engine.ConversionError.DecodeFailed => "이미지를 읽지 못했습니다: " + r.ErrorMessage,
-        Engine.ConversionError.EncodeFailed => "저장하지 못했습니다: " + r.ErrorMessage,
-        Engine.ConversionError.OutputIsInput => "원본 파일을 덮어쓸 수 없습니다.",
-        Engine.ConversionError.VerificationFailed => "변환 결과가 원본과 다릅니다(검증 실패).",
-        Engine.ConversionError.IoError => "파일 입출력 오류: " + r.ErrorMessage,
-        _ => r.ErrorMessage ?? "알 수 없는 오류",
+        Engine.ConversionError.InputNotFound => Loc.T("원본 파일을 찾을 수 없습니다.", "The original file was not found."),
+        Engine.ConversionError.UnsupportedInputFormat => Loc.T("지원하지 않는 이미지 형식입니다.", "This image format is not supported."),
+        Engine.ConversionError.DecodeFailed => Loc.T("이미지를 읽지 못했습니다: ", "Could not read the image: ") + r.ErrorMessage,
+        Engine.ConversionError.EncodeFailed => Loc.T("저장하지 못했습니다: ", "Could not save: ") + r.ErrorMessage,
+        Engine.ConversionError.OutputIsInput => Loc.T("원본 파일을 덮어쓸 수 없습니다.", "The original file cannot be overwritten."),
+        Engine.ConversionError.VerificationFailed => Loc.T("변환 결과가 원본과 다릅니다(검증 실패).", "The result differs from the original (verification failed)."),
+        Engine.ConversionError.IoError => Loc.T("파일 입출력 오류: ", "File error: ") + r.ErrorMessage,
+        _ => r.ErrorMessage ?? Loc.T("알 수 없는 오류", "Unknown error"),
     };
 
     /// <summary>성공 항목에 붙일 한국어 안내. 완전 무손실이면 null(또는 검증 통과 표시).</summary>
@@ -84,18 +85,18 @@ public sealed class EngineAdapter : IConversionEngine
         {
             parts.Add(w switch
             {
-                Engine.ConversionWarning.LossyFormat => "손실 압축 포맷",
-                Engine.ConversionWarning.BitDepthReduced => "비트 깊이 축소",
-                Engine.ConversionWarning.AlphaFlattened => "투명 영역을 배경색으로 채움",
-                Engine.ConversionWarning.MetadataDropped => "일부 메타데이터 제외",
-                Engine.ConversionWarning.ExtraFramesDropped => "첫 프레임만 변환",
-                Engine.ConversionWarning.ColorSpaceConverted => "색 공간을 RGB로 변환",
-                Engine.ConversionWarning.Resized => "크기 줄임",
+                Engine.ConversionWarning.LossyFormat => Loc.T("손실 압축 포맷", "Lossy format"),
+                Engine.ConversionWarning.BitDepthReduced => Loc.T("비트 깊이 축소", "Bit depth reduced"),
+                Engine.ConversionWarning.AlphaFlattened => Loc.T("투명 영역을 배경색으로 채움", "Transparency filled with the background color"),
+                Engine.ConversionWarning.MetadataDropped => Loc.T("일부 메타데이터 제외", "Some metadata left out"),
+                Engine.ConversionWarning.ExtraFramesDropped => Loc.T("첫 프레임만 변환", "Only the first frame converted"),
+                Engine.ConversionWarning.ColorSpaceConverted => Loc.T("색 공간을 RGB로 변환", "Color space converted to RGB"),
+                Engine.ConversionWarning.Resized => Loc.T("크기 줄임", "Resized"),
                 _ => w.ToString(),
             });
         }
-        if (r.FrameCount > 0) parts.Insert(0, $"프레임 {r.FrameCount:N0}개를 폴더에 저장");
-        if (r.Verification is { Identical: true }) parts.Add("픽셀 검증 통과");
+        if (r.FrameCount > 0) parts.Insert(0, Loc.T($"프레임 {r.FrameCount:N0}개를 폴더에 저장", $"{r.FrameCount:N0} frames saved to a folder"));
+        if (r.Verification is { Identical: true }) parts.Add(Loc.T("픽셀 검증 통과", "Pixels verified"));
         return parts.Count == 0 ? null : string.Join(", ", parts);
     }
 }

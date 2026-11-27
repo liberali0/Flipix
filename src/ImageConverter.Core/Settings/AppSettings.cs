@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ImageConverter.Core.Batch;
+using ImageConverter.Core.Localization;
 
 namespace ImageConverter.Core.Settings;
 
@@ -58,6 +59,8 @@ public sealed class AppSettings
     public int ResizeMaxSize { get; set; } = 1920;
     /// <summary>줄일 비율(%).</summary>
     public int ResizePercent { get; set; } = 50;
+    /// <summary>화면 언어(Workshop과 우클릭 메뉴 공통, 셸 확장이 읽음). 기본은 Windows 표시 언어를 따른다.</summary>
+    public UiLanguage Language { get; set; } = UiLanguage.Auto;
 
     public int EffectiveParallelism =>
         MaxParallelism > 0 ? MaxParallelism : Math.Max(1, Environment.ProcessorCount / 2);

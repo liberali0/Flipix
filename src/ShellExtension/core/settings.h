@@ -10,6 +10,12 @@
 
 namespace qic {
 
+// Top-level "language" in settings.json: "auto" (Windows display language), "korean" or "english".
+enum class UiLanguage { Auto, Korean, English };
+
+// Korean when chosen, or on Auto when Windows shows Korean; English otherwise.
+bool UseEnglish(UiLanguage preference, bool windowsUsesKorean);
+
 struct QuickMenuSettings {
     std::vector<std::string> formats;  // output format ids, in menu order
     bool showDetails = true;           // show "자세히..." (open the app)
@@ -19,6 +25,7 @@ struct QuickMenuSettings {
     bool notifySuccess = false;        // quickMenu.notify == "always": also tell the user when everything worked
     bool checkForUpdates = true;       // top-level checkForUpdates: look for a new version about once a day
     bool allFrames = false;            // top-level allFrames: animated GIF/WebP -> every frame (imgconv --all-frames)
+    UiLanguage language = UiLanguage::Auto;  // top-level language: menu and message text
 };
 
 // True when the settings ask to move converted originals into a usable folder.

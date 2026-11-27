@@ -19,6 +19,7 @@ struct LaunchRequest {
     std::wstring followUpExe;
     bool notifySuccess = false;
     bool checkForUpdates = false;  // already decided to be due
+    bool english = false;          // message box language
 };
 
 // Starts the process and returns immediately. For hidden tools a background thread waits for

@@ -7,6 +7,7 @@ using ImageConverter.App.Services;
 using ImageConverter.Core;
 using ImageConverter.Core.Batch;
 using ImageConverter.Core.Engine;
+using ImageConverter.Core.Localization;
 using ImageConverter.Core.Settings;
 using ImageConverter.Core.Updates;
 using Microsoft.Win32;
@@ -33,7 +34,7 @@ public sealed class MainViewModel : ObservableObject
     private bool _isRunning;
     private bool _isPaused;
     private int _runTotal, _runDone, _runFailed;
-    private string _statusText = "이미지를 추가하세요.";
+    private string _statusText = Loc.T("이미지를 추가하세요.", "Add images.");
     private bool _isScanning;
     private bool _verify;
     private bool _parallelismChanged;
@@ -92,15 +93,15 @@ public sealed class MainViewModel : ObservableObject
     public IReadOnlyList<FormatInfo> Formats => FormatCatalog.All;
     public IReadOnlyList<Choice<ConflictPolicy>> ConflictChoices { get; } = new[]
     {
-        new Choice<ConflictPolicy>(ConflictPolicy.Rename, "이름 뒤에 번호 붙이기"),
-        new Choice<ConflictPolicy>(ConflictPolicy.Overwrite, "덮어쓰기"),
-        new Choice<ConflictPolicy>(ConflictPolicy.Skip, "건너뛰기"),
+        new Choice<ConflictPolicy>(ConflictPolicy.Rename, Loc.T("이름 뒤에 번호 붙이기", "Add a number to the name")),
+        new Choice<ConflictPolicy>(ConflictPolicy.Overwrite, Loc.T("덮어쓰기", "Overwrite")),
+        new Choice<ConflictPolicy>(ConflictPolicy.Skip, Loc.T("건너뛰기", "Skip")),
     };
     public IReadOnlyList<Choice<ResizeMode>> ResizeChoices { get; } = new[]
     {
-        new Choice<ResizeMode>(ResizeMode.None, "원본 그대로"),
-        new Choice<ResizeMode>(ResizeMode.MaxSize, "최대 크기 (비율 유지)"),
-        new Choice<ResizeMode>(ResizeMode.Percent, "비율 (%)"),
+        new Choice<ResizeMode>(ResizeMode.None, Loc.T("원본 그대로", "Original size")),
+        new Choice<ResizeMode>(ResizeMode.MaxSize, Loc.T("최대 크기 (비율 유지)", "Max size (keep aspect ratio)")),
+        new Choice<ResizeMode>(ResizeMode.Percent, Loc.T("비율 (%)", "Scale (%)")),
     };
 
     /// <summary>크기 줄이기 방식. 최대 크기는 긴 쪽 기준, 둘 다 키우지는 않는다.</summary>
@@ -116,19 +117,19 @@ public sealed class MainViewModel : ObservableObject
 
     public IReadOnlyList<Choice<OriginalFileAction>> OriginalActionChoices { get; } = new[]
     {
-        new Choice<OriginalFileAction>(OriginalFileAction.Keep, "그대로 두기"),
-        new Choice<OriginalFileAction>(OriginalFileAction.Move, "지정 폴더로 옮기기"),
+        new Choice<OriginalFileAction>(OriginalFileAction.Keep, Loc.T("그대로 두기", "Keep")),
+        new Choice<OriginalFileAction>(OriginalFileAction.Move, Loc.T("지정 폴더로 옮기기", "Move to a folder")),
     };
     public IReadOnlyList<Choice<bool>> SaveLocationChoices { get; } = new[]
     {
-        new Choice<bool>(false, "원본과 같은 폴더"),
-        new Choice<bool>(true, "지정 폴더"),
+        new Choice<bool>(false, Loc.T("원본과 같은 폴더", "Same folder as the original")),
+        new Choice<bool>(true, Loc.T("지정 폴더", "Chosen folder")),
     };
     public IReadOnlyList<Choice<ThemePreference>> ThemeChoices { get; } = new[]
     {
-        new Choice<ThemePreference>(ThemePreference.System, "시스템"),
-        new Choice<ThemePreference>(ThemePreference.Light, "라이트"),
-        new Choice<ThemePreference>(ThemePreference.Dark, "다크"),
+        new Choice<ThemePreference>(ThemePreference.System, Loc.T("시스템", "System")),
+        new Choice<ThemePreference>(ThemePreference.Light, Loc.T("라이트", "Light")),
+        new Choice<ThemePreference>(ThemePreference.Dark, Loc.T("다크", "Dark")),
     };
 
     /// <summary>화면 테마. 바꾸면 바로 적용하고 설정에 저장한다.</summary>
@@ -152,10 +153,10 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>빠른 변환 카드: 변환이 끝난 원본을 어떻게 하는지 한 줄로.</summary>
     public string QuickOriginalText =>
         _settings.QuickMenu.MoveOriginal && !string.IsNullOrWhiteSpace(_settings.QuickMenu.MoveOriginalTo)
-            ? "원본: " + _settings.QuickMenu.MoveOriginalTo + "(으)로 옮기기"
-            : _settings.QuickMenu.DeleteOriginal ? "원본: 휴지통으로 보내기" : "원본: 그대로 두기";
+            ? Loc.T("원본: " + _settings.QuickMenu.MoveOriginalTo + "(으)로 옮기기", "Originals: move to " + _settings.QuickMenu.MoveOriginalTo)
+            : _settings.QuickMenu.DeleteOriginal ? Loc.T("원본: 휴지통으로 보내기", "Originals: move to Recycle Bin") : Loc.T("원본: 그대로 두기", "Originals: keep");
 
-    public string JobCountText => $"{Jobs.Count:N0}개";
+    public string JobCountText => Loc.T($"{Jobs.Count:N0}개", $"{Jobs.Count:N0}");
     public int MaxParallelismLimit => Math.Max(2, Environment.ProcessorCount);
 
     public ICommand AddFilesCommand { get; }
@@ -177,7 +178,7 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>개발자에게 연락하는 곳(X 프로필). 사용자가 2026-11-25 지정.</summary>
     public const string ContactUrl = "https://x.com/Liberali_0";
-    public string ContactToolTip => "개발자에게 의견·문의 보내기 (X @Liberali_0)";
+    public string ContactToolTip => Loc.T("개발자에게 의견·문의 보내기 (X @Liberali_0)", "Send feedback to the developer (X @Liberali_0)");
 
     public bool IsEmpty => Jobs.Count == 0;
     private bool CanEdit => !IsRunning && !_isScanning;
@@ -214,7 +215,7 @@ public sealed class MainViewModel : ObservableObject
     }
     public bool IsIdle => !IsRunning;
     public bool IsPaused { get => _isPaused; private set { if (Set(ref _isPaused, value)) Raise(nameof(PauseButtonText)); } }
-    public string PauseButtonText => IsPaused ? "계속" : "일시정지";
+    public string PauseButtonText => IsPaused ? Loc.T("계속", "Resume") : Loc.T("일시정지", "Pause");
 
     public double OverallProgress => _runTotal == 0 ? 0 : 100.0 * _runDone / _runTotal;
     public string StatusText { get => _statusText; private set => Set(ref _statusText, value); }
@@ -233,7 +234,7 @@ public sealed class MainViewModel : ObservableObject
         var list = paths.ToList();
         var exts = _engine.SupportedInputExtensions;
         _isScanning = true;
-        StatusText = "파일을 찾는 중...";
+        StatusText = Loc.T("파일을 찾는 중...", "Finding files...");
         CommandManager.InvalidateRequerySuggested();
         try
         {
@@ -249,11 +250,11 @@ public sealed class MainViewModel : ObservableObject
                 Jobs.Add(new ConversionJob(f.Path, f.Bytes, f.SourceRoot));
                 added++;
             }
-            StatusText = added == 0 ? "추가할 이미지가 없습니다." : $"{added:N0}개 추가됨 (총 {Jobs.Count:N0}개)";
+            StatusText = added == 0 ? Loc.T("추가할 이미지가 없습니다.", "No images to add.") : Loc.T($"{added:N0}개 추가됨 (총 {Jobs.Count:N0}개)", $"{added:N0} added ({Jobs.Count:N0} total)");
         }
         catch (Exception ex)
         {
-            StatusText = "파일을 찾는 중 오류: " + ex.Message;
+            StatusText = Loc.T("파일을 찾는 중 오류: ", "Error while finding files: ") + ex.Message;
         }
         finally
         {
@@ -265,7 +266,7 @@ public sealed class MainViewModel : ObservableObject
     private void AddFiles()
     {
         var filter = string.Join(";", _engine.SupportedInputExtensions.Select(e => "*" + e));
-        var dlg = new OpenFileDialog { Multiselect = true, Filter = $"이미지|{filter}|모든 파일|*.*" };
+        var dlg = new OpenFileDialog { Multiselect = true, Filter = Loc.T($"이미지|{filter}|모든 파일|*.*", $"Images|{filter}|All files|*.*") };
         if (dlg.ShowDialog() == true) _ = AddPathsAsync(dlg.FileNames);
     }
 
@@ -283,11 +284,11 @@ public sealed class MainViewModel : ObservableObject
 
     private void BrowseOriginalFolder()
     {
-        var dlg = new OpenFolderDialog { Title = "변환이 끝난 원본을 옮길 폴더" };
+        var dlg = new OpenFolderDialog { Title = Loc.T("변환이 끝난 원본을 옮길 폴더", "Folder for converted originals") };
         if (dlg.ShowDialog() == true) { OriginalMoveFolder = dlg.FolderName; OriginalAction = OriginalFileAction.Move; }
     }
 
-    private void Clear() { Jobs.Clear(); _runTotal = _runDone = _runFailed = 0; Raise(nameof(OverallProgress)); StatusText = "이미지를 추가하세요."; }
+    private void Clear() { Jobs.Clear(); _runTotal = _runDone = _runFailed = 0; Raise(nameof(OverallProgress)); StatusText = Loc.T("이미지를 추가하세요.", "Add images."); }
 
     private void RemoveFinished()
     {
@@ -306,13 +307,13 @@ public sealed class MainViewModel : ObservableObject
     {
         if (UseCustomFolder && string.IsNullOrWhiteSpace(OutputFolder))
         {
-            StatusText = "저장할 폴더를 지정하세요.";
+            StatusText = Loc.T("저장할 폴더를 지정하세요.", "Choose a folder to save to.");
             return;
         }
 
         if (MoveOriginal && (string.IsNullOrWhiteSpace(OriginalMoveFolder) || !Path.IsPathFullyQualified(OriginalMoveFolder.Trim())))
         {
-            StatusText = "원본을 옮길 폴더를 전체 경로(예: D:\\원본 보관)로 지정하세요.";
+            StatusText = Loc.T("원본을 옮길 폴더를 전체 경로(예: D:\\원본 보관)로 지정하세요.", "Enter the full path of the folder for originals (for example D:\\Originals).");
             return;
         }
 
@@ -322,7 +323,7 @@ public sealed class MainViewModel : ObservableObject
 
         if (UseCustomFolder && !Path.IsPathRooted(OutputFolder))
         {
-            StatusText = "저장 폴더는 전체 경로(예: D:\\변환결과)로 지정하세요.";
+            StatusText = Loc.T("저장 폴더는 전체 경로(예: D:\\변환결과)로 지정하세요.", "Enter the full path of the save folder (for example D:\\Converted).");
             return;
         }
 
@@ -331,7 +332,7 @@ public sealed class MainViewModel : ObservableObject
         {
             if (!int.TryParse(ResizeMaxSize.Trim(), out var px) || px < 1)
             {
-                StatusText = "최대 크기는 1 이상의 픽셀 수로 입력하세요(예: 1920).";
+                StatusText = Loc.T("최대 크기는 1 이상의 픽셀 수로 입력하세요(예: 1920).", "Enter a max size of 1 pixel or more (for example 1920).");
                 return;
             }
             maxSize = px;
@@ -340,7 +341,7 @@ public sealed class MainViewModel : ObservableObject
         {
             if (!int.TryParse(ResizePercent.Trim().TrimEnd('%'), out var pct) || pct is < 1 or > 100)
             {
-                StatusText = "비율은 1~100 사이로 입력하세요(예: 50).";
+                StatusText = Loc.T("비율은 1~100 사이로 입력하세요(예: 50).", "Enter a scale from 1 to 100 (for example 50).");
                 return;
             }
             scalePercent = pct;
@@ -370,15 +371,15 @@ public sealed class MainViewModel : ObservableObject
         _cts = new CancellationTokenSource();
         IsRunning = true;
         IsPaused = false;
-        StatusText = "변환 중...";
+        StatusText = Loc.T("변환 중...", "Converting...");
         try
         {
             var s = await _queue.RunAsync(runJobs, options, _cts.Token);
-            StatusText = $"완료 {s.Succeeded:N0} · 실패 {s.Failed:N0} · 건너뜀 {s.Skipped:N0} · 취소 {s.Canceled:N0}";
+            StatusText = Loc.T($"완료 {s.Succeeded:N0} · 실패 {s.Failed:N0} · 건너뜀 {s.Skipped:N0} · 취소 {s.Canceled:N0}", $"Done {s.Succeeded:N0} · Failed {s.Failed:N0} · Skipped {s.Skipped:N0} · Canceled {s.Canceled:N0}");
         }
         catch (Exception ex)
         {
-            StatusText = "오류: " + ex.Message;
+            StatusText = Loc.T("오류: ", "Error: ") + ex.Message;
         }
         finally
         {
@@ -392,8 +393,8 @@ public sealed class MainViewModel : ObservableObject
 
     private void TogglePause()
     {
-        if (_queue.IsPaused) { _queue.Resume(); IsPaused = false; StatusText = "변환 중..."; }
-        else { _queue.Pause(); IsPaused = true; StatusText = "일시정지됨 (진행 중인 항목은 끝까지 처리)"; }
+        if (_queue.IsPaused) { _queue.Resume(); IsPaused = false; StatusText = Loc.T("변환 중...", "Converting..."); }
+        else { _queue.Pause(); IsPaused = true; StatusText = Loc.T("일시정지됨 (진행 중인 항목은 끝까지 처리)", "Paused (files already in progress will finish)"); }
     }
 
     private void OnJobFinished(ConversionJob job)
@@ -404,7 +405,7 @@ public sealed class MainViewModel : ObservableObject
             if (job.Status == JobStatus.Failed) _runFailed++;
             Raise(nameof(OverallProgress));
             if (IsRunning && !IsPaused)
-                StatusText = $"변환 중... {_runDone:N0}/{_runTotal:N0}" + (_runFailed > 0 ? $" (실패 {_runFailed:N0})" : "");
+                StatusText = Loc.T($"변환 중... {_runDone:N0}/{_runTotal:N0}", $"Converting... {_runDone:N0}/{_runTotal:N0}") + (_runFailed > 0 ? Loc.T($" (실패 {_runFailed:N0})", $" ({_runFailed:N0} failed)") : "");
         }, null);
     }
 
@@ -436,8 +437,8 @@ public sealed class MainViewModel : ObservableObject
             _settings.QuickMenu.MoveOriginalTo = win.MoveOriginalTo;
             Raise(nameof(QuickFormats));
             Raise(nameof(QuickOriginalText));
-            try { _store.Save(_settings); StatusText = "빠른 변환 설정을 저장했습니다."; }
-            catch (Exception ex) { StatusText = "설정 저장 실패: " + ex.Message; }
+            try { _store.Save(_settings); StatusText = Loc.T("빠른 변환 설정을 저장했습니다.", "Quick convert settings saved."); }
+            catch (Exception ex) { StatusText = Loc.T("설정 저장 실패: ", "Could not save settings: ") + ex.Message; }
         }
     }
 
@@ -449,7 +450,7 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusText = $"브라우저를 열지 못했습니다. {ContactUrl} 로 직접 접속해 주세요. ({ex.Message})";
+            StatusText = Loc.T($"브라우저를 열지 못했습니다. {ContactUrl} 로 직접 접속해 주세요. ({ex.Message})", $"Could not open the browser. Please go to {ContactUrl}. ({ex.Message})");
         }
     }
 
@@ -459,7 +460,7 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>새 버전이 있을 때만 상단 막대에 업데이트 단추를 보인다.</summary>
     public bool UpdateAvailable => _update != null;
-    public string UpdateButtonText => _update is null ? "" : $"새 버전 v{_update.Version} 업데이트";
+    public string UpdateButtonText => _update is null ? "" : Loc.T($"새 버전 v{_update.Version} 업데이트", $"Update to v{_update.Version}");
 
     private void OpenAdvancedSettings()
     {
@@ -468,8 +469,9 @@ public sealed class MainViewModel : ObservableObject
         _settings.QuickMenu.Notify = win.Notify;
         _settings.CheckForUpdates = win.CheckForUpdates;
         _settings.AllFrames = win.AllFrames;
-        try { _store.Save(_settings); StatusText = "상세 설정을 저장했습니다."; }
-        catch (Exception ex) { StatusText = "설정 저장 실패: " + ex.Message; }
+        _settings.Language = win.Language;
+        try { _store.Save(_settings); StatusText = Loc.T("상세 설정을 저장했습니다.", "Advanced settings saved."); }
+        catch (Exception ex) { StatusText = Loc.T("설정 저장 실패: ", "Could not save settings: ") + ex.Message; }
     }
 
     /// <summary>앱 시작 때 한 번. 설정이 꺼져 있으면 아무것도 하지 않는다.</summary>
@@ -479,16 +481,16 @@ public sealed class MainViewModel : ObservableObject
     {
         try
         {
-            if (userAsked) StatusText = "새 버전을 확인하는 중…";
+            if (userAsked) StatusText = Loc.T("새 버전을 확인하는 중…", "Checking for a new version…");
             var info = await UpdateService.CheckAsync();
             SetUpdate(info);
             if (userAsked)
-                StatusText = info is null ? $"최신 버전({UpdateService.CurrentVersionText})을 쓰고 있어요." : $"새 버전 v{info.Version}이(가) 있어요. 위의 업데이트 단추를 누르세요.";
+                StatusText = info is null ? Loc.T($"최신 버전({UpdateService.CurrentVersionText})을 쓰고 있어요.", $"You have the latest version ({UpdateService.CurrentVersionText}).") : Loc.T($"새 버전 v{info.Version}이(가) 있어요. 위의 업데이트 단추를 누르세요.", $"Version v{info.Version} is available. Press the update button above.");
         }
         catch (Exception ex)
         {
             // 시작할 때 자동 확인은 인터넷이 없어도 조용히 넘어간다.
-            if (userAsked) StatusText = "새 버전을 확인하지 못했습니다: " + ex.Message;
+            if (userAsked) StatusText = Loc.T("새 버전을 확인하지 못했습니다: ", "Could not check for a new version: ") + ex.Message;
         }
     }
 
@@ -507,29 +509,29 @@ public sealed class MainViewModel : ObservableObject
         var owner = System.Windows.Application.Current.MainWindow;
         if (IsRunning)
         {
-            System.Windows.MessageBox.Show(owner, "변환이 끝난 뒤에 업데이트해 주세요.", "Flipix 업데이트",
+            System.Windows.MessageBox.Show(owner, Loc.T("변환이 끝난 뒤에 업데이트해 주세요.", "Please update after the conversion finishes."), Loc.T("Flipix 업데이트", "Flipix update"),
                 System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
             return;
         }
         var answer = System.Windows.MessageBox.Show(owner,
-            $"Flipix를 v{info.Version}(으)로 업데이트할까요?\n\n지금 설치된 위치와 설정은 그대로 두고 프로그램만 바꿔요. 업데이트하는 동안 Workshop이 잠시 닫혔다가 다시 열려요.",
-            "Flipix 업데이트", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+            Loc.T($"Flipix를 v{info.Version}(으)로 업데이트할까요?\n\n지금 설치된 위치와 설정은 그대로 두고 프로그램만 바꿔요. 업데이트하는 동안 Workshop이 잠시 닫혔다가 다시 열려요.", $"Update Flipix to v{info.Version}?\n\nOnly the program changes. Your install folder and settings stay the same. Workshop closes during the update and opens again."),
+            Loc.T("Flipix 업데이트", "Flipix update"), System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
         if (answer != System.Windows.MessageBoxResult.Yes) return;
 
         _isUpdating = true;
         CommandManager.InvalidateRequerySuggested();
         try
         {
-            StatusText = $"v{info.Version} 내려받는 중…";
-            var progress = new Progress<double>(p => StatusText = $"v{info.Version} 내려받는 중… {p:0}%");
+            StatusText = Loc.T($"v{info.Version} 내려받는 중…", $"Downloading v{info.Version}…");
+            var progress = new Progress<double>(p => StatusText = Loc.T($"v{info.Version} 내려받는 중… {p:0}%", $"Downloading v{info.Version}… {p:0}%"));
             var setup = await UpdateService.DownloadAsync(info, progress);
-            StatusText = "업데이트를 시작합니다…";
+            StatusText = Loc.T("업데이트를 시작합니다…", "Starting the update…");
             UpdateService.LaunchInstaller(setup);
             System.Windows.Application.Current.Shutdown();
         }
         catch (Exception ex)
         {
-            StatusText = "업데이트하지 못했습니다: " + ex.Message;
+            StatusText = Loc.T("업데이트하지 못했습니다: ", "Could not update: ") + ex.Message;
             _isUpdating = false;
             CommandManager.InvalidateRequerySuggested();
         }
@@ -540,11 +542,11 @@ public sealed class MainViewModel : ObservableObject
         try
         {
             DesktopShortcut.Create();
-            StatusText = "바탕 화면에 Flipix 바로 가기를 만들었어요.";
+            StatusText = Loc.T("바탕 화면에 Flipix 바로 가기를 만들었어요.", "Created a Flipix shortcut on the desktop.");
         }
         catch (Exception ex)
         {
-            StatusText = "바로 가기를 만들지 못했습니다: " + ex.Message;
+            StatusText = Loc.T("바로 가기를 만들지 못했습니다: ", "Could not create the shortcut: ") + ex.Message;
         }
     }
 }

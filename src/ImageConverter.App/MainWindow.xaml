@@ -1,6 +1,7 @@
 <Window x:Class="ImageConverter.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:ImageConverter.App"
         xmlns:batch="clr-namespace:ImageConverter.Core.Batch;assembly=ImageConverter.Core"
         Icon="pack://application:,,,/Assets/flipix.ico"
         Title="Flipix Workshop" Width="1120" Height="720" MinWidth="900" MinHeight="560"
@@ -56,17 +57,17 @@
                            RenderOptions.BitmapScalingMode="HighQuality" />
                     <TextBlock Text="Flipix Workshop" FontSize="16" FontWeight="SemiBold" Margin="10,0,22,0"
                                VerticalAlignment="Center" />
-                    <Button Style="{StaticResource Flx.PrimaryButton}" Content="+  파일 추가" Command="{Binding AddFilesCommand}" />
-                    <Button Style="{StaticResource Flx.Button}" Content="폴더 추가" Command="{Binding AddFolderCommand}" />
+                    <Button Style="{StaticResource Flx.PrimaryButton}" Content="{l:T '+  파일 추가', '+  Add files'}" Command="{Binding AddFilesCommand}" />
+                    <Button Style="{StaticResource Flx.Button}" Content="{l:T '폴더 추가', 'Add folder'}" Command="{Binding AddFolderCommand}" />
                 </StackPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- 새 버전이 있을 때만 보인다 -->
                     <Button Style="{StaticResource Flx.PrimaryButton}" Content="{Binding UpdateButtonText}"
                             Command="{Binding UpdateCommand}" Margin="0,0,10,0"
                             Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}"
-                            ToolTip="설치 위치와 설정은 그대로 두고 프로그램만 새 버전으로 바꿉니다" />
+                            ToolTip="{l:T '설치 위치와 설정은 그대로 두고 프로그램만 새 버전으로 바꿉니다', 'Updates the program only. Your install folder and settings stay the same'}" />
                     <Border Background="{DynamicResource Flx.Chip}" CornerRadius="7" Padding="3" Margin="0,0,10,0"
-                            ToolTip="화면 테마">
+                            ToolTip="{l:T '화면 테마', 'Theme'}">
                         <ListBox Style="{StaticResource Flx.PlainList}" ItemContainerStyle="{StaticResource Flx.SegmentItem}"
                                  ItemsSource="{Binding ThemeChoices}" SelectedValuePath="Value" SelectedValue="{Binding Theme}">
                             <ListBox.ItemsPanel>
@@ -74,17 +75,17 @@
                             </ListBox.ItemsPanel>
                         </ListBox>
                     </Border>
-                    <Button Style="{StaticResource Flx.GhostButton}" Content="문의하기" Command="{Binding ContactCommand}"
+                    <Button Style="{StaticResource Flx.GhostButton}" Content="{l:T '문의하기', 'Contact'}" Command="{Binding ContactCommand}"
                             ToolTip="{Binding ContactToolTip}" />
                     <!-- 자주 쓰지 않는 기능은 더보기 메뉴에 둔다 -->
                     <Button Style="{StaticResource Flx.GhostButton}" Content="⋯" FontSize="15" Padding="10,2"
-                            ToolTip="더보기" Click="OnMoreClick">
+                            ToolTip="{l:T '더보기', 'More'}" Click="OnMoreClick">
                         <Button.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="상세 설정…" Command="{Binding OpenAdvancedSettingsCommand}" />
+                                <MenuItem Header="{l:T '상세 설정…', 'Advanced settings…'}" Command="{Binding OpenAdvancedSettingsCommand}" />
                                 <Separator />
-                                <MenuItem Header="업데이트 확인" Command="{Binding CheckUpdatesCommand}" />
-                                <MenuItem Header="바탕 화면에 바로 가기 만들기" Command="{Binding CreateShortcutCommand}" />
+                                <MenuItem Header="{l:T '업데이트 확인', 'Check for updates'}" Command="{Binding CheckUpdatesCommand}" />
+                                <MenuItem Header="{l:T '바탕 화면에 바로 가기 만들기', 'Create desktop shortcut'}" Command="{Binding CreateShortcutCommand}" />
                                 <Separator />
                                 <MenuItem Header="{Binding VersionText}" IsEnabled="False" />
                             </ContextMenu>
@@ -113,12 +114,12 @@
                             </LinearGradientBrush>
                         </Border.Background>
                         <StackPanel TextElement.Foreground="White">
-                            <TextBlock Text="⚡ 빠른 변환" FontSize="17" FontWeight="Bold" />
-                            <TextBlock Text="탐색기에서 이미지를 우클릭하면 바로 변환돼요" Opacity="0.85" Margin="0,3,0,12"
+                            <TextBlock Text="{l:T '⚡ 빠른 변환', '⚡ Quick convert'}" FontSize="17" FontWeight="Bold" />
+                            <TextBlock Text="{l:T '탐색기에서 이미지를 우클릭하면 바로 변환돼요', 'Right-click images in File Explorer to convert them right away'}" Opacity="0.85" Margin="0,3,0,12"
                                        TextWrapping="Wrap" />
                             <Border Background="#26FFFFFF" CornerRadius="8" Padding="12,10">
                                 <StackPanel>
-                                    <TextBlock Text="우클릭 ▸ 빠른 이미지 포맷 변환" FontSize="12" Opacity="0.85" Margin="0,0,0,8" />
+                                    <TextBlock Text="{l:T '우클릭 ▸ 빠른 이미지 포맷 변환', 'Right-click ▸ Quick image format convert'}" FontSize="12" Opacity="0.85" Margin="0,0,0,8" />
                                     <ItemsControl ItemsSource="{Binding QuickFormats}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
@@ -133,15 +134,15 @@
                                     </ItemsControl>
                                     <Border BorderBrush="#80FFFFFF" BorderThickness="1" CornerRadius="12" Padding="10,2"
                                             HorizontalAlignment="Left">
-                                        <TextBlock Text="+ 자세히" FontSize="12" />
+                                        <TextBlock Text="{l:T '+ 자세히', '+ More'}" FontSize="12" />
                                     </Border>
                                 </StackPanel>
                             </Border>
                             <DockPanel Margin="0,12,0,0">
-                                <Button DockPanel.Dock="Right" Content="설정 바꾸기" Command="{Binding OpenSettingsCommand}"
+                                <Button DockPanel.Dock="Right" Content="{l:T '설정 바꾸기', 'Change settings'}" Command="{Binding OpenSettingsCommand}"
                                         Style="{StaticResource Flx.Button}" Margin="10,0,0,0"
                                         Background="White" Foreground="#4F46E5" BorderBrush="White" FontWeight="SemiBold"
-                                        ToolTip="우클릭 메뉴에 보일 형식과 원본 처리 방법을 바꿉니다" />
+                                        ToolTip="{l:T '우클릭 메뉴에 보일 형식과 원본 처리 방법을 바꿉니다', 'Choose the formats in the right-click menu and what happens to originals'}" />
                                 <TextBlock Text="{Binding QuickOriginalText}" FontSize="12" Opacity="0.9"
                                            TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                            ToolTip="{Binding QuickOriginalText}" />
@@ -152,7 +153,7 @@
                     <!-- 이 창에서 변환할 때 쓰는 설정 -->
                     <Border Style="{StaticResource Flx.CardPanel}" Padding="18,4,18,18" Margin="0,14,0,16" IsEnabled="{Binding IsIdle}">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="변환 형식" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{l:T '변환 형식', 'Convert to'}" />
                             <ListBox Style="{StaticResource Flx.PlainList}" ItemContainerStyle="{StaticResource Flx.ChipItem}"
                                      ItemsSource="{Binding Formats}" SelectedValuePath="Id" SelectedValue="{Binding TargetFormatId}">
                                 <ListBox.ItemsPanel>
@@ -160,67 +161,67 @@
                                 </ListBox.ItemsPanel>
                             </ListBox>
                             <TextBlock Style="{StaticResource Hint}" Foreground="{DynamicResource Flx.Warn}"
-                                       Text="JPG는 손실 압축이라 품질 100으로 저장해도 원본과 완전히 같지 않을 수 있어요."
+                                       Text="{l:T 'JPG는 손실 압축이라 품질 100으로 저장해도 원본과 완전히 같지 않을 수 있어요.', 'JPG is lossy, so even at quality 100 the result may not be identical to the original.'}"
                                        Visibility="{Binding LossyWarning, Converter={StaticResource BoolToVis}}" />
 
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="크기" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{l:T '크기', 'Size'}" />
                             <ComboBox ItemsSource="{Binding ResizeChoices}" DisplayMemberPath="Label"
                                       SelectedValuePath="Value" SelectedValue="{Binding Resize}" />
                             <StackPanel Visibility="{Binding ResizeByMaxSize, Converter={StaticResource BoolToVis}}">
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <TextBlock Text="최대 크기:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="{l:T '최대 크기:', 'Max size:'}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                     <TextBox Text="{Binding ResizeMaxSize, UpdateSourceTrigger=PropertyChanged}" Width="72"
                                              VerticalContentAlignment="Center" />
-                                    <TextBlock Text="px (비율 유지)" VerticalAlignment="Center" Margin="6,0,0,0" />
+                                    <TextBlock Text="{l:T 'px (비율 유지)', 'px (keep aspect ratio)'}" VerticalAlignment="Center" Margin="6,0,0,0" />
                                 </StackPanel>
-                                <TextBlock Style="{StaticResource Hint}" Text="가로와 세로 중 큰 쪽이 이 크기를 넘지 않게 줄여요. 더 작은 이미지는 그대로 둬요." />
+                                <TextBlock Style="{StaticResource Hint}" Text="{l:T '가로와 세로 중 큰 쪽이 이 크기를 넘지 않게 줄여요. 더 작은 이미지는 그대로 둬요.', 'Shrinks images so the longer side is at most this size. Smaller images stay as they are.'}" />
                             </StackPanel>
                             <StackPanel Visibility="{Binding ResizeByPercent, Converter={StaticResource BoolToVis}}">
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <TextBlock Text="비율:" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                    <TextBlock Text="{l:T '비율:', 'Scale:'}" VerticalAlignment="Center" Margin="0,0,8,0" />
                                     <TextBox Text="{Binding ResizePercent, UpdateSourceTrigger=PropertyChanged}" Width="56"
                                              VerticalContentAlignment="Center" />
                                     <TextBlock Text="%" VerticalAlignment="Center" Margin="6,0,0,0" />
                                 </StackPanel>
-                                <TextBlock Style="{StaticResource Hint}" Text="가로와 세로를 같은 비율로 줄여요(1~100%)." />
+                                <TextBlock Style="{StaticResource Hint}" Text="{l:T '가로와 세로를 같은 비율로 줄여요(1~100%).', 'Shrinks width and height by the same percentage (1-100%).'}" />
                             </StackPanel>
 
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="저장 위치" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{l:T '저장 위치', 'Save to'}" />
                             <ComboBox ItemsSource="{Binding SaveLocationChoices}" DisplayMemberPath="Label"
                                       SelectedValuePath="Value" SelectedValue="{Binding UseCustomFolder}" />
                             <StackPanel Visibility="{Binding UseCustomFolder, Converter={StaticResource BoolToVis}}">
                                 <DockPanel Margin="0,6,0,0">
-                                    <Button DockPanel.Dock="Right" Style="{StaticResource Flx.Button}" Content="찾기"
+                                    <Button DockPanel.Dock="Right" Style="{StaticResource Flx.Button}" Content="{l:T '찾기', 'Browse'}"
                                             Command="{Binding BrowseOutputCommand}" Margin="6,0,0,0" Padding="12,5" />
                                     <TextBox Text="{Binding OutputFolder, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" />
                                 </DockPanel>
-                                <CheckBox Content="폴더로 추가한 파일은 하위 폴더 구조 유지" IsChecked="{Binding PreserveStructure}" Margin="0,6,0,0" />
+                                <CheckBox Content="{l:T '폴더로 추가한 파일은 하위 폴더 구조 유지', 'Keep subfolder structure for files added from folders'}" IsChecked="{Binding PreserveStructure}" Margin="0,6,0,0" />
                             </StackPanel>
 
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="원본 파일" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{l:T '원본 파일', 'Original files'}" />
                             <ComboBox ItemsSource="{Binding OriginalActionChoices}" DisplayMemberPath="Label"
                                       SelectedValuePath="Value" SelectedValue="{Binding OriginalAction}"
-                                      ToolTip="변환에 성공한 원본만 처리합니다. 실패하거나 건너뛴 원본은 그대로 둡니다." />
+                                      ToolTip="{l:T '변환에 성공한 원본만 처리합니다. 실패하거나 건너뛴 원본은 그대로 둡니다.', 'Applies only to originals that converted successfully. Failed or skipped originals stay where they are.'}" />
                             <DockPanel Margin="0,6,0,0" Visibility="{Binding MoveOriginal, Converter={StaticResource BoolToVis}}">
-                                <Button DockPanel.Dock="Right" Style="{StaticResource Flx.Button}" Content="찾기"
+                                <Button DockPanel.Dock="Right" Style="{StaticResource Flx.Button}" Content="{l:T '찾기', 'Browse'}"
                                         Command="{Binding BrowseOriginalFolderCommand}" Margin="6,0,0,0" Padding="12,5" />
                                 <TextBox Text="{Binding OriginalMoveFolder, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"
-                                         ToolTip="원본을 옮길 폴더. 같은 이름이 있으면 번호를 붙여 덮어쓰지 않습니다." />
+                                         ToolTip="{l:T '원본을 옮길 폴더. 같은 이름이 있으면 번호를 붙여 덮어쓰지 않습니다.', 'Folder to move originals into. Files with the same name get a number instead of being overwritten.'}" />
                             </DockPanel>
 
-                            <TextBlock Style="{StaticResource FieldLabel}" Text="같은 이름이 있으면" />
+                            <TextBlock Style="{StaticResource FieldLabel}" Text="{l:T '같은 이름이 있으면', 'If the name exists'}" />
                             <ComboBox ItemsSource="{Binding ConflictChoices}" DisplayMemberPath="Label"
                                       SelectedValuePath="Value" SelectedValue="{Binding Conflict}" />
 
                             <DockPanel Margin="0,14,0,6">
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding Parallelism}" FontWeight="SemiBold" />
-                                <TextBlock Style="{StaticResource FieldLabel}" Text="동시 처리" Margin="0" />
+                                <TextBlock Style="{StaticResource FieldLabel}" Text="{l:T '동시 처리', 'Parallel jobs'}" Margin="0" />
                             </DockPanel>
                             <Slider Minimum="1" Maximum="{Binding MaxParallelismLimit}" Value="{Binding Parallelism}"
                                     TickFrequency="1" IsSnapToTickEnabled="True" />
-                            <TextBlock Style="{StaticResource Hint}" Text="128MB 이상 큰 파일은 한 번에 1개씩 처리해요." />
+                            <TextBlock Style="{StaticResource Hint}" Text="{l:T '128MB 이상 큰 파일은 한 번에 1개씩 처리해요.', 'Files of 128 MB or more are converted one at a time.'}" />
 
-                            <CheckBox Content="변환 후 픽셀 검증 (느림)" IsChecked="{Binding Verify}" Margin="0,14,0,0" />
+                            <CheckBox Content="{l:T '변환 후 픽셀 검증 (느림)', 'Verify pixels after converting (slow)'}" IsChecked="{Binding Verify}" Margin="0,14,0,0" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -237,12 +238,12 @@
 
                     <DockPanel Grid.Row="0" Margin="16,12,10,8">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Style="{StaticResource Flx.GhostButton}" Content="실패 다시 시도" Command="{Binding RetryFailedCommand}" />
-                            <Button Style="{StaticResource Flx.GhostButton}" Content="완료 지우기" Command="{Binding RemoveFinishedCommand}" />
-                            <Button Style="{StaticResource Flx.GhostButton}" Content="모두 지우기" Command="{Binding ClearCommand}" />
+                            <Button Style="{StaticResource Flx.GhostButton}" Content="{l:T '실패 다시 시도', 'Retry failed'}" Command="{Binding RetryFailedCommand}" />
+                            <Button Style="{StaticResource Flx.GhostButton}" Content="{l:T '완료 지우기', 'Clear finished'}" Command="{Binding RemoveFinishedCommand}" />
+                            <Button Style="{StaticResource Flx.GhostButton}" Content="{l:T '모두 지우기', 'Clear all'}" Command="{Binding ClearCommand}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="작업 목록" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="{l:T '작업 목록', 'Queue'}" FontSize="15" FontWeight="SemiBold" />
                             <Border Background="{DynamicResource Flx.Chip}" CornerRadius="9" Padding="8,1" Margin="8,0,0,0"
                                     VerticalAlignment="Center">
                                 <TextBlock Text="{Binding JobCountText}" FontSize="11.5" Foreground="{DynamicResource Flx.Mute}" />
@@ -261,11 +262,11 @@
                                 <ColumnDefinition Width="120" />
                                 <ColumnDefinition Width="3*" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="파일" />
-                            <TextBlock Grid.Column="1" Text="크기" />
-                            <TextBlock Grid.Column="2" Text="상태" />
-                            <TextBlock Grid.Column="3" Text="진행" />
-                            <TextBlock Grid.Column="4" Text="결과" Margin="12,0,0,0" />
+                            <TextBlock Grid.Column="0" Text="{l:T '파일', 'File'}" />
+                            <TextBlock Grid.Column="1" Text="{l:T '크기', 'Size'}" />
+                            <TextBlock Grid.Column="2" Text="{l:T '상태', 'Status'}" />
+                            <TextBlock Grid.Column="3" Text="{l:T '진행', 'Progress'}" />
+                            <TextBlock Grid.Column="4" Text="{l:T '결과', 'Result'}" Margin="12,0,0,0" />
                         </Grid>
                     </Border>
 
@@ -322,9 +323,9 @@
                                        StrokeDashArray="4 3" />
                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock Text="⇩" FontSize="30" HorizontalAlignment="Center" Foreground="{DynamicResource Flx.Accent}" />
-                                <TextBlock Text="이미지 파일이나 폴더를 여기에 끌어다 놓으세요" FontSize="15" FontWeight="SemiBold"
+                                <TextBlock Text="{l:T '이미지 파일이나 폴더를 여기에 끌어다 놓으세요', 'Drag image files or folders here'}" FontSize="15" FontWeight="SemiBold"
                                            HorizontalAlignment="Center" Margin="0,6,0,4" />
-                                <TextBlock Text="폴더는 하위 폴더까지 모두 찾아요" Foreground="{DynamicResource Flx.Mute}"
+                                <TextBlock Text="{l:T '폴더는 하위 폴더까지 모두 찾아요', 'Folders are searched including subfolders'}" Foreground="{DynamicResource Flx.Mute}"
                                            HorizontalAlignment="Center" />
                             </StackPanel>
                         </Grid>
@@ -339,8 +340,8 @@
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="16,0,0,0">
                     <Button Style="{StaticResource Flx.Button}" Content="{Binding PauseButtonText}" Command="{Binding PauseResumeCommand}" />
-                    <Button Style="{StaticResource Flx.Button}" Content="취소" Command="{Binding CancelCommand}" />
-                    <Button Style="{StaticResource Flx.PrimaryButton}" Content="변환 시작" Command="{Binding StartCommand}"
+                    <Button Style="{StaticResource Flx.Button}" Content="{l:T '취소', 'Cancel'}" Command="{Binding CancelCommand}" />
+                    <Button Style="{StaticResource Flx.PrimaryButton}" Content="{l:T '변환 시작', 'Start'}" Command="{Binding StartCommand}"
                             Padding="26,8" Margin="0" />
                 </StackPanel>
                 <StackPanel VerticalAlignment="Center">

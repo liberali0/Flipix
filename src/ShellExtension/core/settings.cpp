@@ -42,7 +42,17 @@ bool operator==(const QuickMenuSettings& left, const QuickMenuSettings& right) {
     return left.formats == right.formats && left.showDetails == right.showDetails &&
            left.deleteOriginal == right.deleteOriginal && left.moveOriginal == right.moveOriginal &&
            left.moveOriginalTo == right.moveOriginalTo && left.notifySuccess == right.notifySuccess &&
-           left.checkForUpdates == right.checkForUpdates && left.allFrames == right.allFrames;
+           left.checkForUpdates == right.checkForUpdates && left.allFrames == right.allFrames &&
+           left.language == right.language;
+}
+
+bool UseEnglish(UiLanguage preference, bool windowsUsesKorean) {
+    switch (preference) {
+        case UiLanguage::Korean: return false;
+        case UiLanguage::English: return true;
+        case UiLanguage::Auto: break;
+    }
+    return !windowsUsesKorean;
 }
 
 bool MovesOriginals(const QuickMenuSettings& settings) {
@@ -62,6 +72,12 @@ QuickMenuSettings ParseQuickMenuSettings(std::string_view utf8Json) {
     if (const JsonValue* frames = document->Find("allFrames");
         frames != nullptr && frames->type == JsonValue::Type::Bool) {
         settings.allFrames = frames->boolean;
+    }
+    if (const JsonValue* language = document->Find("language");
+        language != nullptr && language->type == JsonValue::Type::String) {
+        const std::string value = LowerAscii(language->string);
+        if (value == "korean") settings.language = UiLanguage::Korean;
+        if (value == "english") settings.language = UiLanguage::English;
     }
     const JsonValue* section = document->Find("quickMenu");
     if (section == nullptr || section->type != JsonValue::Type::Object) return settings;

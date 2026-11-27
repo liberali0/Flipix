@@ -4,6 +4,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Cryptography;
 using ImageConverter.Core.Updates;
+using ImageConverter.Core.Localization;
 
 namespace ImageConverter.App.Services;
 
@@ -44,7 +45,7 @@ public static class UpdateService
     {
         var sums = await Http.GetStringAsync(info.ChecksumsUrl, ct).ConfigureAwait(false);
         var expected = UpdateFeed.FindHash(sums, info.SetupName)
-            ?? throw new InvalidOperationException("릴리스의 해시 목록에 설치 파일이 없습니다.");
+            ?? throw new InvalidOperationException(Loc.T("릴리스의 해시 목록에 설치 파일이 없습니다.", "The release hash list does not include the installer."));
 
         var dir = Path.Combine(Path.GetTempPath(), "Flipix-Update");
         Directory.CreateDirectory(dir);
@@ -74,7 +75,7 @@ public static class UpdateService
         if (actual != expected)
         {
             File.Delete(tmp);
-            throw new InvalidOperationException("내려받은 설치 파일이 릴리스와 다릅니다. 잠시 뒤 다시 시도해 주세요.");
+            throw new InvalidOperationException(Loc.T("내려받은 설치 파일이 릴리스와 다릅니다. 잠시 뒤 다시 시도해 주세요.", "The downloaded installer does not match the release. Please try again later."));
         }
         File.Move(tmp, path, overwrite: true);
         return path;

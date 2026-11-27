@@ -89,6 +89,10 @@ QuickMenuSettings LoadSettings() {
                                  [](const std::wstring& path) { return ReadSmallFile(path); });
 }
 
+bool EnglishUi(const QuickMenuSettings& settings) {
+    return UseEnglish(settings.language, PRIMARYLANGID(GetUserDefaultUILanguage()) == LANG_KOREAN);
+}
+
 bool UpdateCheckDue() {
     // The stamp sits next to the settings file the app writes (inside the package LocalCache for MSIX).
     bool found = false;

@@ -47,7 +47,7 @@ STDAPI DllRegisterServer() {
     try {
         const std::wstring dllPath = win::ModulePath();
         if (dllPath.empty()) return SELFREG_E_CLASS;
-        for (const auto& value : LegacyRegistrationValues(kShellExtensionClsid, dllPath)) {
+        for (const auto& value : LegacyRegistrationValues(kShellExtensionClsid, dllPath, win::EnglishUi(win::LoadSettings()))) {
             const LSTATUS status = RegSetKeyValueW(
                 HKEY_CURRENT_USER, value.subKey.c_str(), value.name.empty() ? nullptr : value.name.c_str(), REG_SZ,
                 value.data.c_str(), static_cast<DWORD>((value.data.size() + 1) * sizeof(wchar_t)));

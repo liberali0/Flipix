@@ -117,3 +117,13 @@ TEST(FollowUpArguments_OnlyWhenThereIsSomethingToDo) {
     CHECK(qic::FollowUpArguments(false, 3, true) == (Args{L"--background", L"--check-update"}));
     CHECK(qic::FollowUpArguments(true, 2, true) == (Args{L"--background", L"--converted", L"2", L"--check-update"}));
 }
+
+TEST(FormatFailureMessage_English) {
+    CHECK_EQ(FormatFailureMessage(2, "", 12, true), std::wstring(L"The conversion could not start.\n\n(exit code 2)"));
+    std::string stderrText;
+    for (int i = 1; i <= 3; ++i) stderrText += "ERROR C:\\" + std::to_string(i) + ".png: bad\n";
+    CHECK_EQ(FormatFailureMessage(1, stderrText, 1, true),
+             std::wstring(L"Some files could not be converted.\n\n"
+                          L"ERROR C:\\1.png: bad\n"
+                          L"… and 2 more"));
+}

@@ -155,7 +155,9 @@ std::vector<std::string> TakeLog() {
 }
 
 void ClearSettings() {
-    DeleteFileW((Env().localAppData + L"\\QuickImageConverter\\settings.json").c_str());
+    // Default settings, except the language: CI runs on English Windows and these tests check the Korean text.
+    CreateDirectoryW((Env().localAppData + L"\\QuickImageConverter").c_str(), nullptr);
+    WriteFileUtf8(Env().localAppData + L"\\QuickImageConverter\\settings.json", R"({"language":"korean"})");
     // A fresh update stamp: no follow-up app start after a conversion, so the log holds only the CLI call.
     CreateDirectoryW((Env().localAppData + L"\\QuickImageConverter").c_str(), nullptr);
     WriteFileUtf8(Env().localAppData + L"\\QuickImageConverter\\update-check.stamp", "now");
@@ -213,8 +215,24 @@ TEST(Smoke_DefaultSubmenu) {
     CHECK_EQ(titles, (std::vector<std::wstring>{L"to PNG", L"to JPG (손실 있음)", L"to BMP", L"---", L"자세히..."}));
 }
 
+TEST(Smoke_EnglishMenu) {
+    ClearSettings();
+    WriteSettings(R"({"language":"english"})");
+    auto root = CreateRoot();
+    REQUIRE(root != nullptr);
+    CHECK_EQ(Title(root.Get()), std::wstring(L"Quick image format convert"));
+    std::vector<std::wstring> titles;
+    for (auto& command : SubCommands(root.Get())) {
+        EXPCMDFLAGS flags = ECF_DEFAULT;
+        command->GetFlags(&flags);
+        titles.push_back((flags & ECF_ISSEPARATOR) != 0 ? L"---" : Title(command.Get()));
+    }
+    CHECK_EQ(titles, (std::vector<std::wstring>{L"to PNG", L"to JPG (lossy)", L"to BMP", L"---", L"More..."}));
+    ClearSettings();
+}
+
 TEST(Smoke_SubmenuFollowsSettingsFile) {
-    WriteSettings(R"({"quickMenu":{"formats":["webp","PNG","heic"],"showDetails":false},"conflict":"rename"})");
+    WriteSettings(R"({"language":"korean","quickMenu":{"formats":["webp","PNG","heic"],"showDetails":false},"conflict":"rename"})");
     auto root = CreateRoot();
     REQUIRE(root != nullptr);
     std::vector<std::wstring> titles;
@@ -289,6 +307,7 @@ TEST(Smoke_LargeSelectionGoesThroughResponseFile) {
 }
 
 TEST(Smoke_RegisterAndUnregisterClassicMenu) {
+    ClearSettings();
     using Entry = HRESULT(STDAPICALLTYPE*)();
     auto registerServer = reinterpret_cast<Entry>(reinterpret_cast<void*>(GetProcAddress(Env().dll, "DllRegisterServer")));
     auto unregisterServer =

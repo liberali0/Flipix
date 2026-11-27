@@ -42,20 +42,20 @@ std::ostream& operator<<(std::ostream& stream, const MenuItem& item) {
     return stream;
 }
 
-std::wstring RootTitle() { return L"빠른 이미지 포맷 변환"; }
+std::wstring RootTitle(bool english) { return english ? L"Quick image format convert" : L"빠른 이미지 포맷 변환"; }
 
-std::vector<MenuItem> ConfiguredSubmenu(const QuickMenuSettings& settings) {
+std::vector<MenuItem> ConfiguredSubmenu(const QuickMenuSettings& settings, bool english) {
     std::vector<MenuItem> items;
     for (const auto& id : settings.formats) {
         const FormatInfo* format = FindOutputFormat(id);
         if (format == nullptr) continue;
         std::wstring title = L"to " + std::wstring(format->label);
-        if (format->lossyOutput) title += L" (손실 있음)";
+        if (format->lossyOutput) title += english ? L" (lossy)" : L" (손실 있음)";
         items.push_back({MenuItemKind::Convert, id, std::move(title)});
     }
     if (settings.showDetails) {
         if (!items.empty()) items.push_back({MenuItemKind::Separator, "", L""});
-        items.push_back({MenuItemKind::Details, "", L"자세히..."});
+        items.push_back({MenuItemKind::Details, "", english ? L"More..." : L"자세히..."});
     }
     return items;
 }
@@ -75,9 +75,10 @@ bool IsItemVisible(const MenuItem& item, const QuickMenuSettings& settings, cons
     return false;
 }
 
-std::vector<MenuItem> VisibleSubmenu(const QuickMenuSettings& settings, const std::vector<std::wstring>& paths) {
+std::vector<MenuItem> VisibleSubmenu(const QuickMenuSettings& settings, const std::vector<std::wstring>& paths,
+                                     bool english) {
     std::vector<MenuItem> visible;
-    for (auto& item : ConfiguredSubmenu(settings)) {
+    for (auto& item : ConfiguredSubmenu(settings, english)) {
         if (IsItemVisible(item, settings, paths)) visible.push_back(std::move(item));
     }
     return visible;

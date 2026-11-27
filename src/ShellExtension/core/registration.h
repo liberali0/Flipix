@@ -26,7 +26,8 @@ std::ostream& operator<<(std::ostream& stream, const RegistryValue& value);
 
 // Values DllRegisterServer writes: the in-proc COM class, and one ExplorerCommandHandler verb
 // per readable extension under Software\Classes\SystemFileAssociations.
-std::vector<RegistryValue> LegacyRegistrationValues(std::wstring_view clsid, std::wstring_view dllPath);
+std::vector<RegistryValue> LegacyRegistrationValues(std::wstring_view clsid, std::wstring_view dllPath,
+                                                   bool english = false);
 
 // Keys DllUnregisterServer deletes with their subtrees.
 std::vector<std::wstring> LegacyRegistrationKeys(std::wstring_view clsid);
