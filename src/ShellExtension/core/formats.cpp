@@ -15,6 +15,8 @@ const std::vector<FormatInfo>& AllFormats() {
         {"avif", L"AVIF", true, false, {L".avif"}},
         // HEIC/HEIF: the engine decodes it but ships no HEVC encoder, so it is input-only.
         {"heic", L"HEIC", false, false, {L".heic", L".heif"}},
+        // GIF (and its animations): input-only; the engine converts the first frame or every frame.
+        {"gif", L"GIF", false, false, {L".gif"}},
     };
     return formats;
 }

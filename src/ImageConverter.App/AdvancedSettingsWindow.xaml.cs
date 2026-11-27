@@ -14,15 +14,19 @@ public partial class AdvancedSettingsWindow : Window
         NotifyAlways.IsChecked = current.QuickMenu.Notify == QuickNotify.Always;
         NotifyFailures.IsChecked = current.QuickMenu.Notify != QuickNotify.Always;
         UpdateNotices.IsChecked = current.CheckForUpdates;
+        AllFramesRadio.IsChecked = current.AllFrames;
+        FirstFrame.IsChecked = !current.AllFrames;
     }
 
     public QuickNotify Notify { get; private set; }
     public bool CheckForUpdates { get; private set; }
+    public bool AllFrames { get; private set; }
 
     private void OnSave(object sender, RoutedEventArgs e)
     {
         Notify = NotifyAlways.IsChecked == true ? QuickNotify.Always : QuickNotify.Failures;
         CheckForUpdates = UpdateNotices.IsChecked == true;
+        AllFrames = AllFramesRadio.IsChecked == true;
         DialogResult = true;
     }
 }

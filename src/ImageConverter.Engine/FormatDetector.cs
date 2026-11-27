@@ -44,6 +44,11 @@ internal static class FormatDetector
             return ImageFormat.Tiff;
         }
 
+        if (h.StartsWith("GIF87a"u8) || h.StartsWith("GIF89a"u8))
+        {
+            return ImageFormat.Gif;
+        }
+
         if (h.Length >= 12 && h.StartsWith("RIFF"u8) && h.Slice(8, 4).SequenceEqual("WEBP"u8))
         {
             return ImageFormat.WebP;

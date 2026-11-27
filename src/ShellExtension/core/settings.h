@@ -18,6 +18,7 @@ struct QuickMenuSettings {
     std::string moveOriginalTo{};      // UTF-8 full folder path; empty when unset or not a full path
     bool notifySuccess = false;        // quickMenu.notify == "always": also tell the user when everything worked
     bool checkForUpdates = true;       // top-level checkForUpdates: look for a new version about once a day
+    bool allFrames = false;            // top-level allFrames: animated GIF/WebP -> every frame (imgconv --all-frames)
 };
 
 // True when the settings ask to move converted originals into a usable folder.

@@ -124,7 +124,10 @@ public sealed class ConversionQueue
             if (result.Success)
             {
                 job.Progress = 100;
-                job.Message = JoinMessage(result.Note, MoveSource(job, outPath, o.MoveSourceTo));
+                if (result.WrittenPath != null) { outPath = result.WrittenPath; job.OutputPath = outPath; }
+                job.Message = JoinMessage(result.Note, result.KeepSource && !string.IsNullOrWhiteSpace(o.MoveSourceTo)
+                    ? "원본은 그대로 둠(첫 장면만 변환)"
+                    : MoveSource(job, outPath, o.MoveSourceTo));
                 job.Status = JobStatus.Succeeded;
             }
             else
@@ -145,7 +148,7 @@ public sealed class ConversionQueue
     {
         if (string.IsNullOrWhiteSpace(folder)) return null;
         if (string.Equals(Path.GetFullPath(job.InputPath), Path.GetFullPath(outPath), StringComparison.OrdinalIgnoreCase)
-            || !File.Exists(outPath))
+            || !(File.Exists(outPath) || Directory.Exists(outPath)))
             return "원본은 그대로 둠(결과 파일을 확인하지 못함)";
         try
         {

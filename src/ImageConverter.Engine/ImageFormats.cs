@@ -13,6 +13,7 @@ public static class ImageFormats
         new(ImageFormat.WebP, "webp", "WebP", [".webp"], CanRead: true, CanWrite: true, IsLosslessOutput: true, SupportsAlpha: true, MaxBitsPerChannel: 8, SupportsMetadata: true),
         new(ImageFormat.Avif, "avif", "AVIF", [".avif"], CanRead: true, CanWrite: true, IsLosslessOutput: true, SupportsAlpha: true, MaxBitsPerChannel: 8, SupportsMetadata: true),
         new(ImageFormat.Heic, "heic", "HEIC", [".heic", ".heif", ".hif"], CanRead: true, CanWrite: false, IsLosslessOutput: false, SupportsAlpha: true, MaxBitsPerChannel: 16, SupportsMetadata: true),
+        new(ImageFormat.Gif, "gif", "GIF", [".gif"], CanRead: true, CanWrite: false, IsLosslessOutput: false, SupportsAlpha: true, MaxBitsPerChannel: 8, SupportsMetadata: false),
     ];
 
     private static readonly Dictionary<string, ImageFormat> ByName = BuildNameIndex();

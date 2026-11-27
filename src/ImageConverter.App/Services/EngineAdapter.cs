@@ -31,6 +31,7 @@ public sealed class EngineAdapter : IConversionEngine
             PreserveMetadata = request.Options.PreserveMetadata,
             BackgroundColor = request.Options.BackgroundColor,
             Verify = request.Options.Verify,
+            AllFrames = request.Options.AllFrames,
             // 출력 경로는 큐가 이미 정했다(충돌 정책 반영). 원본은 엔진이 따로 지킨다.
             IfOutputExists = Engine.ExistingFileBehavior.Overwrite,
         };
@@ -47,8 +48,17 @@ public sealed class EngineAdapter : IConversionEngine
                 return ConversionResult.Fail(DescribeError(r));
             default:
                 long size = 0;
-                try { if (r.OutputPath != null) size = new FileInfo(r.OutputPath).Length; } catch { }
-                return ConversionResult.Ok(size, DescribeWarnings(r));
+                try
+                {
+                    if (r.FrameCount > 0 && r.OutputPath != null)
+                        size = new DirectoryInfo(r.OutputPath).EnumerateFiles().Sum(f => f.Length);
+                    else if (r.OutputPath != null)
+                        size = new FileInfo(r.OutputPath).Length;
+                }
+                catch { }
+                return new ConversionResult(true, null, size, DescribeWarnings(r),
+                    WrittenPath: r.FrameCount > 0 ? r.OutputPath : null,
+                    KeepSource: r.Warnings.Contains(Engine.ConversionWarning.ExtraFramesDropped));
         }
     }
 
@@ -76,11 +86,12 @@ public sealed class EngineAdapter : IConversionEngine
                 Engine.ConversionWarning.BitDepthReduced => "비트 깊이 축소",
                 Engine.ConversionWarning.AlphaFlattened => "투명 영역을 배경색으로 채움",
                 Engine.ConversionWarning.MetadataDropped => "일부 메타데이터 제외",
-                Engine.ConversionWarning.ExtraFramesDropped => "첫 프레임만 변환",
+                Engine.ConversionWarning.ExtraFramesDropped => "첫 장면만 변환",
                 Engine.ConversionWarning.ColorSpaceConverted => "색 공간을 RGB로 변환",
                 _ => w.ToString(),
             });
         }
+        if (r.FrameCount > 0) parts.Insert(0, $"장면 {r.FrameCount:N0}개를 폴더에 저장");
         if (r.Verification is { Identical: true }) parts.Add("픽셀 검증 통과");
         return parts.Count == 0 ? null : string.Join(", ", parts);
     }

@@ -47,6 +47,8 @@ public sealed class AppSettings
     public string? OriginalMoveFolder { get; set; }
     /// <summary>새 버전 알림. Workshop을 열 때와, 우클릭 변환 뒤 하루 한 번(셸 확장이 읽음) 확인한다. 기본은 켬.</summary>
     public bool CheckForUpdates { get; set; } = true;
+    /// <summary>움직이는 GIF·WEBP를 변환할 때 모든 장면을 각각 저장(우클릭 변환과 Workshop 공통, 셸 확장이 읽음). 기본은 첫 장면만.</summary>
+    public bool AllFrames { get; set; }
 
     public int EffectiveParallelism =>
         MaxParallelism > 0 ? MaxParallelism : Math.Max(1, Environment.ProcessorCount / 2);

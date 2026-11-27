@@ -12,6 +12,9 @@ public enum ImageFormat
 
     /// <summary>HEIC/HEIF (HEVC-coded). Readable; not writable (no HEVC encoder is bundled).</summary>
     Heic,
+
+    /// <summary>GIF, including animations. Readable only (GIF stores at most 256 colours, so it is not an output).</summary>
+    Gif,
 }
 
 /// <summary>Static facts about a format, for menus and settings screens.</summary>

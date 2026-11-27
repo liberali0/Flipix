@@ -57,8 +57,11 @@ public sealed record ConversionResult
 {
     public required string InputPath { get; init; }
 
-    /// <summary>Where the file was written. Null when nothing was written.</summary>
+    /// <summary>Where the file was written (a folder when <see cref="FrameCount"/> &gt; 0). Null when nothing was written.</summary>
     public string? OutputPath { get; init; }
+
+    /// <summary>With <see cref="ConversionOptions.AllFrames"/> on an animation: how many frame files were written into <see cref="OutputPath"/>. Otherwise 0.</summary>
+    public int FrameCount { get; init; }
 
     public required ConversionStatus Status { get; init; }
 
