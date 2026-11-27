@@ -29,6 +29,8 @@ internal static class CliApp
           --jpeg-quality <1-100>    default 100
           --no-metadata             drop EXIF/XMP/IPTC/ICC
           --verify                  re-read lossless outputs and compare every pixel
+          --max-size <px>           shrink so the longer side is at most <px> (keeps the aspect ratio)
+          --scale <1-100>           shrink both sides to this percentage
           --all-frames              animated GIF/WebP: write every frame into <name>_frames\
                                     (default: first frame only; the original is then always kept)
           --delete-source           move each successfully converted source to the Recycle Bin
@@ -402,6 +404,24 @@ internal static class CliApp
                     case "--verify":
                         options = options with { Verify = true };
                         break;
+                    case "--max-size":
+                        var px = Value();
+                        if (!int.TryParse(px, out var maxSize) || maxSize < 1)
+                        {
+                            throw new UsageException($"--max-size must be a positive number of pixels, not '{px}'.");
+                        }
+
+                        options = options with { MaxSize = maxSize };
+                        break;
+                    case "--scale":
+                        var pct = Value().TrimEnd('%');
+                        if (!int.TryParse(pct, out var scale) || scale is < 1 or > 100)
+                        {
+                            throw new UsageException($"--scale must be a percentage from 1 to 100, not '{pct}'.");
+                        }
+
+                        options = options with { ScalePercent = scale };
+                        break;
                     case "--all-frames":
                         options = options with { AllFrames = true };
                         break;
@@ -452,6 +472,11 @@ internal static class CliApp
             if (deleteSource && moveSourceTo is not null)
             {
                 throw new UsageException("Use either --delete-source or --move-source-to, not both.");
+            }
+
+            if (options.MaxSize is not null && options.ScalePercent is not null)
+            {
+                throw new UsageException("Use either --max-size or --scale, not both.");
             }
 
             if (deleteSource)

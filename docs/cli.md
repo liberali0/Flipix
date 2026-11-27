@@ -23,6 +23,8 @@ imgconv --version
 | `--jpeg-quality <1-100>` | `100` | JPEG only. JPEG is always written 4:4:4 (no chroma subsampling). |
 | `--no-metadata` | off | Drop EXIF/XMP/IPTC/ICC instead of copying them. |
 | `--verify` | off | Re-decode every lossless output and compare all pixels with the source. |
+| `--max-size <px>` | off | Shrink (never enlarge) so the longer side is at most `<px>`, keeping the aspect ratio. Adds the `Resized` warning. |
+| `--scale <1-100>` | off | Shrink both sides to this percentage. Cannot be combined with `--max-size`. |
 | `--all-frames` | off | Animated GIF/WebP: write every frame, as shown on screen, to `<name>_frames\<name>_001.<ext>`, ... (the result's output is that folder, `frames` gives the count). Without it only the first frame is written and the source is never recycled or moved. |
 | `--delete-source` | off | After a file converts successfully, move its source to the Recycle Bin. Turns on `--verify`, so a lossless output is pixel-checked first. Skipped, failed and cancelled files are never touched. |
 | `--move-source-to <dir>` | off | After a file converts successfully, move its source into this folder (created if missing). Cannot be combined with `--delete-source`. |

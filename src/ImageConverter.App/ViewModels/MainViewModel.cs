@@ -39,6 +39,9 @@ public sealed class MainViewModel : ObservableObject
     private bool _parallelismChanged;
     private OriginalFileAction _originalAction;
     private string _originalMoveFolder = "";
+    private ResizeMode _resize;
+    private string _resizeMaxSize = "1920";
+    private string _resizePercent = "50";
     private UpdateInfo? _update;
     private bool _isUpdating;
 
@@ -56,6 +59,9 @@ public sealed class MainViewModel : ObservableObject
         _parallelism = _settings.EffectiveParallelism;
         _originalAction = _settings.OriginalAction;
         _originalMoveFolder = _settings.OriginalMoveFolder ?? "";
+        _resize = _settings.Resize;
+        _resizeMaxSize = _settings.ResizeMaxSize.ToString();
+        _resizePercent = _settings.ResizePercent.ToString();
         if (!string.IsNullOrWhiteSpace(_settings.CustomOutputFolder))
         {
             _useCustomFolder = true;
@@ -90,6 +96,24 @@ public sealed class MainViewModel : ObservableObject
         new Choice<ConflictPolicy>(ConflictPolicy.Overwrite, "덮어쓰기"),
         new Choice<ConflictPolicy>(ConflictPolicy.Skip, "건너뛰기"),
     };
+    public IReadOnlyList<Choice<ResizeMode>> ResizeChoices { get; } = new[]
+    {
+        new Choice<ResizeMode>(ResizeMode.None, "원본 그대로"),
+        new Choice<ResizeMode>(ResizeMode.MaxSize, "최대 크기 (비율 유지)"),
+        new Choice<ResizeMode>(ResizeMode.Percent, "비율 (%)"),
+    };
+
+    /// <summary>크기 줄이기 방식. 최대 크기는 긴 쪽 기준, 둘 다 키우지는 않는다.</summary>
+    public ResizeMode Resize
+    {
+        get => _resize;
+        set { if (Set(ref _resize, value)) { Raise(nameof(ResizeByMaxSize)); Raise(nameof(ResizeByPercent)); } }
+    }
+    public bool ResizeByMaxSize => Resize == ResizeMode.MaxSize;
+    public bool ResizeByPercent => Resize == ResizeMode.Percent;
+    public string ResizeMaxSize { get => _resizeMaxSize; set => Set(ref _resizeMaxSize, value); }
+    public string ResizePercent { get => _resizePercent; set => Set(ref _resizePercent, value); }
+
     public IReadOnlyList<Choice<OriginalFileAction>> OriginalActionChoices { get; } = new[]
     {
         new Choice<OriginalFileAction>(OriginalFileAction.Keep, "그대로 두기"),
@@ -302,6 +326,26 @@ public sealed class MainViewModel : ObservableObject
             return;
         }
 
+        int? maxSize = null, scalePercent = null;
+        if (Resize == ResizeMode.MaxSize)
+        {
+            if (!int.TryParse(ResizeMaxSize.Trim(), out var px) || px < 1)
+            {
+                StatusText = "최대 크기는 1 이상의 픽셀 수로 입력하세요(예: 1920).";
+                return;
+            }
+            maxSize = px;
+        }
+        else if (Resize == ResizeMode.Percent)
+        {
+            if (!int.TryParse(ResizePercent.Trim().TrimEnd('%'), out var pct) || pct is < 1 or > 100)
+            {
+                StatusText = "비율은 1~100 사이로 입력하세요(예: 50).";
+                return;
+            }
+            scalePercent = pct;
+        }
+
         SaveSettings();
         var options = new BatchOptions
         {
@@ -313,7 +357,13 @@ public sealed class MainViewModel : ObservableObject
                 Conflict = Conflict,
                 PreserveStructure = PreserveStructure,
             },
-            Conversion = new ConversionOptions { Verify = Verify, AllFrames = _settings.AllFrames },
+            Conversion = new ConversionOptions
+            {
+                Verify = Verify,
+                AllFrames = _settings.AllFrames,
+                MaxSize = maxSize,
+                ScalePercent = scalePercent,
+            },
             MoveSourceTo = MoveOriginal ? OriginalMoveFolder.Trim() : null,
         };
 
@@ -369,6 +419,9 @@ public sealed class MainViewModel : ObservableObject
         _settings.CustomOutputFolder = UseCustomFolder ? OutputFolder : null;
         _settings.OriginalAction = OriginalAction;
         _settings.OriginalMoveFolder = string.IsNullOrWhiteSpace(OriginalMoveFolder) ? null : OriginalMoveFolder.Trim();
+        _settings.Resize = Resize;
+        if (int.TryParse(ResizeMaxSize.Trim(), out var px) && px > 0) _settings.ResizeMaxSize = px;
+        if (int.TryParse(ResizePercent.Trim().TrimEnd('%'), out var pct) && pct is >= 1 and <= 100) _settings.ResizePercent = pct;
         try { _store.Save(_settings); } catch { /* 설정 저장 실패는 변환을 막지 않는다 */ }
     }
 

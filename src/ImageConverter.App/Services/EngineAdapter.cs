@@ -32,6 +32,8 @@ public sealed class EngineAdapter : IConversionEngine
             BackgroundColor = request.Options.BackgroundColor,
             Verify = request.Options.Verify,
             AllFrames = request.Options.AllFrames,
+            MaxSize = request.Options.MaxSize,
+            ScalePercent = request.Options.ScalePercent,
             // 출력 경로는 큐가 이미 정했다(충돌 정책 반영). 원본은 엔진이 따로 지킨다.
             IfOutputExists = Engine.ExistingFileBehavior.Overwrite,
         };
@@ -88,6 +90,7 @@ public sealed class EngineAdapter : IConversionEngine
                 Engine.ConversionWarning.MetadataDropped => "일부 메타데이터 제외",
                 Engine.ConversionWarning.ExtraFramesDropped => "첫 프레임만 변환",
                 Engine.ConversionWarning.ColorSpaceConverted => "색 공간을 RGB로 변환",
+                Engine.ConversionWarning.Resized => "크기 줄임",
                 _ => w.ToString(),
             });
         }

@@ -45,6 +45,9 @@ public enum ConversionWarning
 
     /// <summary>Pixels were converted to RGB because the target cannot store the source colour space (for example CMYK).</summary>
     ColorSpaceConverted,
+
+    /// <summary>The picture was made smaller (<see cref="ConversionOptions.MaxSize"/> or <see cref="ConversionOptions.ScalePercent"/>).</summary>
+    Resized,
 }
 
 /// <summary>Result of decoding the written file again and comparing it with the source pixels.</summary>
