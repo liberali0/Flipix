@@ -33,6 +33,7 @@ cmake -S src/ShellExtension -B build/shell -A x64
 cmake --build build/shell --config Release
 ctest --test-dir build/shell -C Release --output-on-failure
 # 결과: build/shell/Release/ImageConverter.ShellExtension.dll
+# ARM64 PC용: -A ARM64 (ARM64 탐색기는 ARM64 DLL만 불러옵니다. 앱과 CLI는 x64 에뮬레이션으로 실행)
 ```
 
 ```bash

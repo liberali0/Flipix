@@ -4,6 +4,8 @@
   설치 마법사(Setup.exe)로 설치한 폴더를 외부 위치로 등록해서, 파일은 그대로 두고 메뉴 DLL에 패키지 신원만 줍니다.
   build-msix.ps1 -ContextMenuOnly 가 자리표시자를 채우고 우클릭 메뉴 블록(shell-extension/AppxManifest.fragment.xml)을 넣습니다.
   Identity Name은 전체 MSIX 패키지와 달라야 둘을 구분할 수 있습니다.
+  패키지 안에 실행 파일이 없으므로 ProcessorArchitecture는 neutral입니다. x64 PC와 ARM64 PC에서 같은 패키지를 쓰고,
+  탐색기는 설치 마법사가 그 PC에 맞게 넣은 DLL(x64 또는 ARM64)을 불러옵니다.
 -->
 <Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
          xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
@@ -13,7 +15,7 @@
          xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
          xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
          IgnorableNamespaces="uap uap10 desktop4 desktop5 com rescap">
-  <Identity Name="__IDENTITY_NAME__" Publisher="__PUBLISHER__" Version="__VERSION__" ProcessorArchitecture="x64" />
+  <Identity Name="__IDENTITY_NAME__" Publisher="__PUBLISHER__" Version="__VERSION__" ProcessorArchitecture="neutral" />
   <Properties>
     <DisplayName>Flipix 우클릭 메뉴</DisplayName>
     <PublisherDisplayName>__PUBLISHER_DISPLAY__</PublisherDisplayName>

@@ -22,7 +22,10 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory dummy | Out-Null
-          foreach ($f in 'ImageConverter.exe','imgconv.exe','ImageConverter.ShellExtension.dll') { Set-Content (Join-Path dummy $f) 'x' }
+          foreach ($f in 'ImageConverter.exe','imgconv.exe') { Set-Content (Join-Path dummy $f) 'x' }
+          # 내용으로 구분해서, PC에 맞는 우클릭 메뉴 DLL이 들어갔는지 아래에서 확인합니다.
+          Set-Content dummy/ImageConverter.ShellExtension.dll 'x64'
+          Set-Content dummy/ImageConverter.ShellExtension.arm64.dll 'arm64'
       - name: Context menu package (sparse MSIX)
         shell: pwsh
         run: |
@@ -59,6 +62,8 @@ jobs:
           $first = Join-Path $env:RUNNER_TEMP 'FlipixA'
           Run $setup "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /TASKS=`"`" /DIR=`"$first`" /LOG=`"$env:RUNNER_TEMP\1-install.log`""
           if (-not (Test-Path "$first\ImageConverter.exe")) { throw "not installed" }
+          if ((Get-Content "$first\ImageConverter.ShellExtension.dll") -ne 'x64') { throw "wrong menu DLL on x64" }
+          if (Test-Path "$first\ImageConverter.ShellExtension.arm64.dll") { throw "arm64 DLL copied on x64" }
           $k = Get-ItemProperty $key
           if ($k.NoModify -ne 0 -or $k.ModifyPath -notlike "*Flipix-Setup.exe*/MODIFY") { throw "Modify button not enabled: $($k.ModifyPath) $($k.NoModify)" }
           if (-not (Test-Path $copy)) { throw "installer copy missing" }
@@ -80,7 +85,32 @@ jobs:
           if (Test-Path $key) { throw "uninstall info left" }
           if (Test-Path $copy) { throw "installer copy left" }
           Write-Host "install/update/move/uninstall OK"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: setup-dummy
+          path: packaging/out/Flipix-Setup-0.0.1.exe
       - name: Installer logs
         if: always()
         shell: pwsh
         run: Get-ChildItem $env:RUNNER_TEMP -Filter '*-*.log' | ForEach-Object { "==== $($_.Name)"; Get-Content $_.FullName -Tail 40 }
+
+  arm64:
+    # 같은 설치 파일이 ARM64 PC(Windows 11 ARM)에서 ARM64용 우클릭 메뉴 DLL을 넣는지 확인합니다.
+    needs: compile
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: setup-dummy
+      - name: Install and uninstall (silent)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dir = Join-Path $env:RUNNER_TEMP 'FlipixArm'
+          $p = Start-Process (Resolve-Path Flipix-Setup-0.0.1.exe).Path -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /TASKS=`"`" /DIR=`"$dir`" /LOG=`"$env:RUNNER_TEMP\arm-install.log`"" -Wait -PassThru
+          if ($p.ExitCode) { Get-Content "$env:RUNNER_TEMP\arm-install.log" -Tail 40; throw "install exit $($p.ExitCode)" }
+          if ((Get-Content "$dir\ImageConverter.ShellExtension.dll") -ne 'arm64') { throw "wrong menu DLL on ARM64" }
+          if (Test-Path "$dir\ImageConverter.ShellExtension.arm64.dll") { throw "arm64 DLL left under its build name" }
+          $p = Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait -PassThru
+          if ($p.ExitCode) { throw "uninstall exit $($p.ExitCode)" }
+          Write-Host "ARM64 install OK"

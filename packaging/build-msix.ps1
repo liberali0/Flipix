@@ -35,7 +35,11 @@ if (-not $Publisher) { $Publisher = "CN=ImageConverter Dev" }
 $layout = Join-Path $OutDir "layout"
 Remove-Item $layout -Recurse -Force -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force $layout | Out-Null
-if (-not $ContextMenuOnly) { Copy-Item "$PublishDir\*" $layout -Recurse }
+if (-not $ContextMenuOnly) {
+  Copy-Item "$PublishDir\*" $layout -Recurse
+  # 전체 MSIX는 x64 패키지입니다. ARM64용 우클릭 메뉴 DLL은 설치 마법사만 씁니다.
+  Remove-Item "$layout\*.arm64.dll" -ErrorAction SilentlyContinue
+}
 Copy-Item "$PSScriptRoot\Assets" "$layout\Assets" -Recurse
 
 # 우클릭 메뉴 블록은 shell-extension 폴더의 조각 파일을 그대로 사용(확장자 목록 중복 방지)

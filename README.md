@@ -21,11 +21,14 @@ Windows 탐색기에서 이미지를 우클릭해 바로 다른 포맷으로 바
 | PNG, TIFF, BMP, WebP, AVIF | ✓ | ✓ (무손실) |
 | JPG | ✓ | ✓ (손실 포맷, 품질 100) |
 | HEIC/HEIF | ✓ | ✗ |
+| GIF | ✓ (첫 프레임 또는 모든 프레임) | ✗ |
 
 ## 설치
 
 1. [Releases](../../releases/latest)에서 `Flipix-Setup-X.Y.Z.exe`를 받아 실행합니다. 관리자 권한은 필요 없습니다.
 2. 이미지를 우클릭해 메뉴를 확인합니다. Windows 11에서는 "더 많은 옵션 표시" 안에 있을 수 있습니다.
+
+지원 환경: Windows 10/11 (x64), Windows 11 ARM64.
 
 Windows가 "알 수 없는 게시자" 경고를 띄우면 `추가 정보` → `실행`을 누르세요. 개인이 배포하는 무료 프로그램이라 상용 서명 인증서가 없어서 뜨는 경고입니다. 받은 파일이 원본인지 확인하는 방법은 [docs/security.md](docs/security.md)에 있습니다.
 
