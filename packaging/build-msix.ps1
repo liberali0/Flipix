@@ -1,12 +1,12 @@
 param(
   [Parameter(Mandatory)][string]$Version,            # 4자리, 예: 1.0.0.0
   [Parameter(Mandatory)][string]$PublishDir,         # 앱 + imgconv.exe + 셸 확장 DLL이 모인 폴더
-  [string]$AppExe = "ImageConverter.exe",
+  [string]$AppExe = "Flipix.exe",
   [string]$IdentityName = "ImageConverter.QuickConverter",
   [string]$Publisher = "",                           # 비우면 PFX의 Subject를 사용
-  [string]$PublisherDisplay = "ImageConverter",
+  [string]$PublisherDisplay = "Flipix",
   [string]$ShellClsid = "233119CD-5628-4066-AB18-D528BC05C51F",
-  [string]$ShellDll = "ImageConverter.ShellExtension.dll",
+  [string]$ShellDll = "Flipix.ShellExtension.dll",
   [string]$PfxPath = "",
   [string]$PfxPassword = "",
   [string]$OutDir = "$PSScriptRoot\out",
@@ -45,7 +45,7 @@ Copy-Item "$PSScriptRoot\Assets" "$layout\Assets" -Recurse
 # 우클릭 메뉴 블록은 shell-extension 폴더의 조각 파일을 그대로 사용(확장자 목록 중복 방지)
 $frag = Get-Content "$PSScriptRoot\shell-extension\AppxManifest.fragment.xml" -Raw -Encoding UTF8
 $frag = [regex]::Replace($frag, '(?s)<!--.*?-->', '').Trim()
-$frag = $frag.Replace("233119CD-5628-4066-AB18-D528BC05C51F", $ShellClsid).Replace("ImageConverter.ShellExtension.dll", $ShellDll)
+$frag = $frag.Replace("233119CD-5628-4066-AB18-D528BC05C51F", $ShellClsid).Replace("Flipix.ShellExtension.dll", $ShellDll)
 
 $esc = { param($v) [Security.SecurityElement]::Escape($v) }
 $template = if ($ContextMenuOnly) { "ContextMenuManifest.template.xml" } else { "AppxManifest.template.xml" }
@@ -64,7 +64,7 @@ $signtool = Get-ChildItem "$kits\10.*\x64\signtool.exe" -ErrorAction SilentlyCon
   Sort-Object { [version]$_.Directory.Parent.Name } | Select-Object -Last 1
 if (-not $makeappx -or -not $signtool) { throw "Windows 10/11 SDK (makeappx/signtool x64) not found under $kits" }
 
-$msix = Join-Path $OutDir $(if ($ContextMenuOnly) { "ImageConverter.ContextMenu.msix" } else { "ImageConverter.msix" })
+$msix = Join-Path $OutDir $(if ($ContextMenuOnly) { "Flipix.ContextMenu.msix" } else { "Flipix.msix" })
 Remove-Item $msix -ErrorAction SilentlyContinue
 # /nv: 외부 위치 패키지는 매니페스트가 가리키는 exe·dll이 패키지 안에 없으므로 그 검사를 건너뜁니다.
 $packArgs = @("pack", "/d", $layout, "/p", $msix, "/o")
@@ -75,6 +75,6 @@ if ($PfxPath) {
   & $signtool.FullName sign /fd SHA256 /f $PfxPath /p $PfxPassword /tr http://timestamp.digicert.com /td SHA256 $msix
   if ($LASTEXITCODE) { throw "signtool failed" }
   # 사용자가 신뢰 등록할 수 있게 공개 인증서도 함께 내보냄
-  [IO.File]::WriteAllBytes((Join-Path $OutDir "ImageConverter.cer"), $cert.Export('Cert'))
+  [IO.File]::WriteAllBytes((Join-Path $OutDir "Flipix.cer"), $cert.Export('Cert'))
 }
 Write-Host "Built $msix (publisher: $Publisher)"

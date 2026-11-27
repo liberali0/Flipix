@@ -1,4 +1,4 @@
-// Stand-in for imgconv.exe / ImageConverter.exe in the smoke tests. Records how it was started
+// Stand-in for imgconv.exe / Flipix.exe in the smoke tests. Records how it was started
 // into the file named by QIC_FAKE_LOG (UTF-8): its own file name, then one argument per line,
 // then the lines of any @response file prefixed with "@> ".
 #include <windows.h>

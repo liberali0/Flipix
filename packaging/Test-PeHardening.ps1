@@ -1,5 +1,5 @@
 # 빌드한 네이티브 DLL/EXE에 기본 보호 기능(ASLR, DEP, Control Flow Guard)이 켜져 있는지 확인합니다.
-# 사용법: ./packaging/Test-PeHardening.ps1 -Path build/shell/Release/ImageConverter.ShellExtension.dll [-Machine x64|arm64]
+# 사용법: ./packaging/Test-PeHardening.ps1 -Path build/shell/Release/Flipix.ShellExtension.dll [-Machine x64|arm64]
 # -Machine을 주면 CPU 종류도 확인합니다(ARM64용 DLL 자리에 x64 DLL이 들어가는 실수 방지).
 param([Parameter(Mandatory)][string[]]$Path, [ValidateSet('', 'x64', 'arm64')][string]$Machine = '')
 $ErrorActionPreference = 'Stop'

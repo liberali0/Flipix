@@ -1,5 +1,5 @@
 // The quick-menu part of the settings file shared with the app
-// (%LOCALAPPDATA%\QuickImageConverter\settings.json, section "quickMenu").
+// (%LOCALAPPDATA%\Flipix\settings.json, section "quickMenu"; QuickImageConverter before v0.1.5).
 #pragma once
 
 #include <functional>

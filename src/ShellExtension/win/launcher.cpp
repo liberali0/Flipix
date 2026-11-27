@@ -61,7 +61,7 @@ std::wstring TempFolder() {
     wchar_t buffer[MAX_PATH + 1] = {};
     const DWORD length = GetTempPathW(MAX_PATH + 1, buffer);
     if (length == 0 || length > MAX_PATH) return {};
-    std::wstring folder = std::wstring(buffer, length) + L"QuickImageConverter";
+    std::wstring folder = std::wstring(buffer, length) + L"Flipix";
     CreateDirectoryW(folder.c_str(), nullptr);  // fine if it already exists
     return folder;
 }

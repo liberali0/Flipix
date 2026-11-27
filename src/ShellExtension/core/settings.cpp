@@ -9,7 +9,9 @@
 namespace qic {
 namespace {
 
-constexpr std::wstring_view kSettingsRelativePath = L"QuickImageConverter\\settings.json";
+// The settings folder was renamed to Flipix in v0.1.5. The app copies an old file over the first time it
+// starts; until then the old file still applies.
+constexpr std::wstring_view kSettingsRelativePaths[] = {L"Flipix\\settings.json", L"QuickImageConverter\\settings.json"};
 
 std::optional<std::string> NormalizeFormatId(std::string_view raw) {
     std::string id = LowerAscii(raw);
@@ -148,12 +150,14 @@ std::vector<std::wstring> SettingsPathCandidates(std::wstring_view localAppData,
         const std::size_t nameEnd = modulePath.find_first_of(L"\\/", nameStart);
         if (nameEnd != std::wstring_view::npos) {
             if (const auto family = PackageFamilyNameFromFullName(modulePath.substr(nameStart, nameEnd - nameStart))) {
-                candidates.push_back(JoinPath(localAppData, L"Packages\\" + *family + L"\\LocalCache\\Local\\" +
-                                                                std::wstring(kSettingsRelativePath)));
+                for (const auto relative : kSettingsRelativePaths) {
+                    candidates.push_back(JoinPath(localAppData, L"Packages\\" + *family + L"\\LocalCache\\Local\\" +
+                                                                    std::wstring(relative)));
+                }
             }
         }
     }
-    candidates.push_back(JoinPath(localAppData, kSettingsRelativePath));
+    for (const auto relative : kSettingsRelativePaths) candidates.push_back(JoinPath(localAppData, relative));
     return candidates;
 }
 

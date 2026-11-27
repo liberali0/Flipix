@@ -28,7 +28,7 @@ STDAPI DllGetClassObject(REFCLSID clsid, REFIID riid, LPVOID* result) {
 STDAPI DllCanUnloadNow() { return win::CanUnload() ? S_OK : S_FALSE; }
 
 // Per-user registration for the classic context menu of an unpackaged install
-// (`regsvr32 ImageConverter.ShellExtension.dll`). MSIX installs use the manifest instead.
+// (`regsvr32 Flipix.ShellExtension.dll`). MSIX installs use the manifest instead.
 STDAPI DllUnregisterServer() {
     HRESULT result = S_OK;
     try {
