@@ -128,3 +128,12 @@ TEST(ConvertArguments_AsksCliToMoveOriginalsWhenEnabled) {
     CHECK_EQ(ConvertArguments("png", settings),
              (std::vector<std::wstring>{L"convert", L"--to", L"png", L"--move-source-to", L"D:\\\uC6D0\uBCF8"}));
 }
+
+TEST(ConvertArguments_AsksForEveryFrameWhenEnabled) {
+    QuickMenuSettings settings = DefaultQuickMenuSettings();
+    settings.allFrames = true;
+    CHECK_EQ(ConvertArguments("png", settings),
+             (std::vector<std::wstring>{L"convert", L"--to", L"png", L"--all-frames"}));
+    CHECK(qic::ParseQuickMenuSettings(R"({"allFrames":true})").allFrames);
+    CHECK(!qic::ParseQuickMenuSettings(R"({"allFrames":"yes"})").allFrames);
+}

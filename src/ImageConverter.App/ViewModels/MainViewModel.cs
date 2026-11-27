@@ -313,7 +313,7 @@ public sealed class MainViewModel : ObservableObject
                 Conflict = Conflict,
                 PreserveStructure = PreserveStructure,
             },
-            Conversion = new ConversionOptions { Verify = Verify },
+            Conversion = new ConversionOptions { Verify = Verify, AllFrames = _settings.AllFrames },
             MoveSourceTo = MoveOriginal ? OriginalMoveFolder.Trim() : null,
         };
 
@@ -414,6 +414,7 @@ public sealed class MainViewModel : ObservableObject
         if (win.ShowDialog() != true) return;
         _settings.QuickMenu.Notify = win.Notify;
         _settings.CheckForUpdates = win.CheckForUpdates;
+        _settings.AllFrames = win.AllFrames;
         try { _store.Save(_settings); StatusText = "상세 설정을 저장했습니다."; }
         catch (Exception ex) { StatusText = "설정 저장 실패: " + ex.Message; }
     }

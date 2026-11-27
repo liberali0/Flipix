@@ -21,11 +21,12 @@ TEST(FormatIdForPath_MapsOtherFormats) {
     CHECK_EQ(FormatIdForPath(L"x.dib"), std::optional<std::string_view>("bmp"));
     CHECK_EQ(FormatIdForPath(L"x.webp"), std::optional<std::string_view>("webp"));
     CHECK_EQ(FormatIdForPath(L"x.avif"), std::optional<std::string_view>("avif"));
+    CHECK_EQ(FormatIdForPath(L"anim.GIF"), std::optional<std::string_view>("gif"));
 }
 
 TEST(FormatIdForPath_RejectsUnknownAndMissingExtensions) {
     CHECK_EQ(FormatIdForPath(L"C:\\a.b\\noext"), std::optional<std::string_view>());
-    CHECK_EQ(FormatIdForPath(L"C:\\a\\anim.gif"), std::optional<std::string_view>());
+    CHECK_EQ(FormatIdForPath(L"C:\\a\\vector.svg"), std::optional<std::string_view>());
     CHECK_EQ(FormatIdForPath(L"C:\\a\\notes.txt"), std::optional<std::string_view>());
 }
 
@@ -64,13 +65,14 @@ TEST(FindOutputFormat_HasMenuLabels) {
 TEST(SupportedInputExtensions_MatchesContract) {
     const std::vector<std::wstring> expected = {L".png", L".jpg", L".jpeg", L".jpe", L".jfif",
                                                 L".bmp", L".dib", L".tif", L".tiff", L".webp",
-                                                L".avif", L".heic", L".heif"};
+                                                L".avif", L".heic", L".heif", L".gif"};
     CHECK_EQ(SupportedInputExtensions(), expected);
 }
 
 TEST(IsSupportedInput_IsCaseInsensitive) {
     CHECK(IsSupportedInput(L"D:\\DCIM\\IMG_0001.HEIC"));
     CHECK(IsSupportedInput(L"a.PNG"));
-    CHECK(!IsSupportedInput(L"a.gif"));
+    CHECK(IsSupportedInput(L"a.GIF"));
+    CHECK(!IsSupportedInput(L"a.svg"));
     CHECK(!IsSupportedInput(L"C:\\folder.png\\inside"));
 }

@@ -29,6 +29,8 @@ internal static class CliApp
           --jpeg-quality <1-100>    default 100
           --no-metadata             drop EXIF/XMP/IPTC/ICC
           --verify                  re-read lossless outputs and compare every pixel
+          --all-frames              animated GIF/WebP: write every frame into <name>_frames\
+                                    (default: first frame only; the original is then always kept)
           --delete-source           move each successfully converted source to the Recycle Bin
                                     (turns on --verify for lossless targets)
           --move-source-to <dir>    move each successfully converted source into this folder
@@ -136,8 +138,7 @@ internal static class CliApp
     /// </summary>
     private static (bool Deleted, string? Error) DeleteSource(ConversionResult r)
     {
-        if (r.Status != ConversionStatus.Succeeded || r.OutputPath is null
-            || OutputPaths.Comparer.Equals(r.InputPath, r.OutputPath) || !File.Exists(r.OutputPath))
+        if (!SourceCanGo(r))
         {
             return (false, null);
         }
@@ -153,11 +154,20 @@ internal static class CliApp
         }
     }
 
+    /// <summary>
+    /// A fully converted source with a separate output (file, or frames folder) that exists. A source whose extra
+    /// frames were dropped (first frame of an animation) stays, because the output does not hold all of it.
+    /// </summary>
+    private static bool SourceCanGo(ConversionResult r) =>
+        r.Status == ConversionStatus.Succeeded && r.OutputPath is not null
+        && !OutputPaths.Comparer.Equals(r.InputPath, r.OutputPath)
+        && (File.Exists(r.OutputPath) || (r.FrameCount > 0 && Directory.Exists(r.OutputPath)))
+        && !r.Warnings.Contains(ConversionWarning.ExtraFramesDropped);
+
     /// <summary>Same rules as <see cref="DeleteSource"/>: only a fully converted source with a separate output moves.</summary>
     private static (string? MovedTo, string? Error) MoveSource(ConversionResult r, string folder)
     {
-        if (r.Status != ConversionStatus.Succeeded || r.OutputPath is null
-            || OutputPaths.Comparer.Equals(r.InputPath, r.OutputPath) || !File.Exists(r.OutputPath))
+        if (!SourceCanGo(r))
         {
             return (null, null);
         }
@@ -214,6 +224,7 @@ internal static class CliApp
                 SourceFormat = r.SourceFormat is { } s ? ImageFormats.Get(s).Id : null,
                 TargetFormat = ImageFormats.Get(r.TargetFormat).Id,
                 Lossless = r.IsLossless,
+                Frames = r.FrameCount > 0 ? r.FrameCount : (int?)null,
                 r.Warnings,
                 Error = r.Error == ConversionError.None ? null : r.Error.ToString(),
                 Message = r.ErrorMessage,
@@ -231,7 +242,8 @@ internal static class CliApp
                 var warnings = r.Warnings.Count > 0 ? $" [warnings: {string.Join(", ", r.Warnings)}]" : string.Empty;
                 var verified = r.Verification?.Identical == true ? " [verified]" : string.Empty;
                 var deleted = sourceDeleted ? " [source recycled]" : movedTo is not null ? $" [source moved to {movedTo}]" : string.Empty;
-                stdout.WriteLine($"OK {r.InputPath} -> {r.OutputPath}{verified}{warnings}{deleted}");
+                var frames = r.FrameCount > 0 ? $" [{r.FrameCount} frames]" : string.Empty;
+                stdout.WriteLine($"OK {r.InputPath} -> {r.OutputPath}{frames}{verified}{warnings}{deleted}");
                 break;
             case ConversionStatus.Skipped:
                 stdout.WriteLine($"SKIPPED {r.InputPath}");
@@ -389,6 +401,9 @@ internal static class CliApp
                         break;
                     case "--verify":
                         options = options with { Verify = true };
+                        break;
+                    case "--all-frames":
+                        options = options with { AllFrames = true };
                         break;
                     case "--json":
                         json = true;

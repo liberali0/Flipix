@@ -42,7 +42,7 @@ bool operator==(const QuickMenuSettings& left, const QuickMenuSettings& right) {
     return left.formats == right.formats && left.showDetails == right.showDetails &&
            left.deleteOriginal == right.deleteOriginal && left.moveOriginal == right.moveOriginal &&
            left.moveOriginalTo == right.moveOriginalTo && left.notifySuccess == right.notifySuccess &&
-           left.checkForUpdates == right.checkForUpdates;
+           left.checkForUpdates == right.checkForUpdates && left.allFrames == right.allFrames;
 }
 
 bool MovesOriginals(const QuickMenuSettings& settings) {
@@ -58,6 +58,10 @@ QuickMenuSettings ParseQuickMenuSettings(std::string_view utf8Json) {
     if (const JsonValue* updates = document->Find("checkForUpdates");
         updates != nullptr && updates->type == JsonValue::Type::Bool) {
         settings.checkForUpdates = updates->boolean;
+    }
+    if (const JsonValue* frames = document->Find("allFrames");
+        frames != nullptr && frames->type == JsonValue::Type::Bool) {
+        settings.allFrames = frames->boolean;
     }
     const JsonValue* section = document->Find("quickMenu");
     if (section == nullptr || section->type != JsonValue::Type::Object) return settings;

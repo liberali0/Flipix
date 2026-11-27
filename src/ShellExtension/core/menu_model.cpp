@@ -101,6 +101,7 @@ std::vector<std::wstring> FilesToConvert(std::string_view formatId, const std::v
 
 std::vector<std::wstring> ConvertArguments(std::string_view formatId, const QuickMenuSettings& settings) {
     std::vector<std::wstring> arguments = {L"convert", L"--to", std::wstring(formatId.begin(), formatId.end())};
+    if (settings.allFrames) arguments.push_back(L"--all-frames");
     if (MovesOriginals(settings)) {
         arguments.push_back(L"--move-source-to");
         arguments.push_back(FromUtf8(settings.moveOriginalTo));
