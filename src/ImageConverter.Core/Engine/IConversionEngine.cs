@@ -9,7 +9,7 @@ public sealed record ConversionOptions
     public string BackgroundColor { get; init; } = "#FFFFFF";
     /// <summary>무손실 포맷으로 저장한 뒤 다시 읽어 모든 픽셀을 비교한다(느려짐).</summary>
     public bool Verify { get; init; }
-    /// <summary>움직이는 GIF·WEBP: 모든 장면을 "이름_frames" 폴더에 각각 저장한다. 끄면 첫 장면만.</summary>
+    /// <summary>움직이는 GIF·WEBP: 모든 프레임을 "이름_frames" 폴더에 각각 저장한다. 끄면 첫 프레임만.</summary>
     public bool AllFrames { get; init; }
 }
 
@@ -20,8 +20,8 @@ public sealed record ConversionRequest(
     ConversionOptions Options);
 
 /// <param name="Note">성공했지만 사용자에게 알릴 내용(예: 손실 압축 포맷, 투명 배경 채움).</param>
-/// <param name="WrittenPath">요청한 출력 경로와 다른 곳에 썼을 때(모든 장면 폴더) 그 경로.</param>
-/// <param name="KeepSource">결과에 원본이 다 담기지 않아(첫 장면만 변환) 원본을 옮기면 안 될 때.</param>
+/// <param name="WrittenPath">요청한 출력 경로와 다른 곳에 썼을 때(모든 프레임 폴더) 그 경로.</param>
+/// <param name="KeepSource">결과에 원본이 다 담기지 않아(첫 프레임만 변환) 원본을 옮기면 안 될 때.</param>
 public sealed record ConversionResult(bool Success, string? ErrorMessage = null, long OutputBytes = 0, string? Note = null,
     string? WrittenPath = null, bool KeepSource = false)
 {

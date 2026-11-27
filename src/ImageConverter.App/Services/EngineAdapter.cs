@@ -86,12 +86,12 @@ public sealed class EngineAdapter : IConversionEngine
                 Engine.ConversionWarning.BitDepthReduced => "비트 깊이 축소",
                 Engine.ConversionWarning.AlphaFlattened => "투명 영역을 배경색으로 채움",
                 Engine.ConversionWarning.MetadataDropped => "일부 메타데이터 제외",
-                Engine.ConversionWarning.ExtraFramesDropped => "첫 장면만 변환",
+                Engine.ConversionWarning.ExtraFramesDropped => "첫 프레임만 변환",
                 Engine.ConversionWarning.ColorSpaceConverted => "색 공간을 RGB로 변환",
                 _ => w.ToString(),
             });
         }
-        if (r.FrameCount > 0) parts.Insert(0, $"장면 {r.FrameCount:N0}개를 폴더에 저장");
+        if (r.FrameCount > 0) parts.Insert(0, $"프레임 {r.FrameCount:N0}개를 폴더에 저장");
         if (r.Verification is { Identical: true }) parts.Add("픽셀 검증 통과");
         return parts.Count == 0 ? null : string.Join(", ", parts);
     }

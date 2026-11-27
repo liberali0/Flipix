@@ -29,10 +29,10 @@
         <Border Style="{StaticResource Flx.CardPanel}" Padding="16,4,16,12" Margin="0,12,0,0">
             <StackPanel>
                 <TextBlock Style="{StaticResource Flx.Label}" Text="움직이는 이미지(GIF·WEBP)를 변환할 때" />
-                <RadioButton x:Name="FirstFrame" GroupName="Frames" Content="첫 장면만" Margin="0,2" />
-                <RadioButton x:Name="AllFramesRadio" GroupName="Frames" Content="모든 장면" Margin="0,2" />
+                <RadioButton x:Name="FirstFrame" GroupName="Frames" Content="첫 프레임만" Margin="0,2" />
+                <RadioButton x:Name="AllFramesRadio" GroupName="Frames" Content="모든 프레임" Margin="0,2" />
                 <TextBlock Style="{StaticResource Hint}"
-                           Text="모든 장면은 '이름_frames' 폴더에 이름_001, 이름_002… 순서로 저장해요. 첫 장면만 변환하면 원본은 지우거나 옮기지 않고 그대로 둬요." />
+                           Text="모든 프레임은 '이름_frames' 폴더에 이름_001, 이름_002… 순서로 저장해요. 첫 프레임만 변환하면 원본은 지우거나 옮기지 않고 그대로 둬요." />
             </StackPanel>
         </Border>
 

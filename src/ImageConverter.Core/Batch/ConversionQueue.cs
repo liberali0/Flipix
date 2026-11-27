@@ -126,7 +126,7 @@ public sealed class ConversionQueue
                 job.Progress = 100;
                 if (result.WrittenPath != null) { outPath = result.WrittenPath; job.OutputPath = outPath; }
                 job.Message = JoinMessage(result.Note, result.KeepSource && !string.IsNullOrWhiteSpace(o.MoveSourceTo)
-                    ? "원본은 그대로 둠(첫 장면만 변환)"
+                    ? "원본은 그대로 둠(첫 프레임만 변환)"
                     : MoveSource(job, outPath, o.MoveSourceTo));
                 job.Status = JobStatus.Succeeded;
             }
