@@ -494,8 +494,8 @@ public sealed class ConversionEngine : IImageConverter
                 return;
             }
 
-            var newWidth = (uint)Math.Max(1, Math.Round(width * factor));
-            var newHeight = (uint)Math.Max(1, Math.Round(height * factor));
+            var newWidth = (uint)Math.Max(1, Math.Round(width * factor, MidpointRounding.AwayFromZero));
+            var newHeight = (uint)Math.Max(1, Math.Round(height * factor, MidpointRounding.AwayFromZero));
             if (newWidth == width && newHeight == height)
             {
                 return;
