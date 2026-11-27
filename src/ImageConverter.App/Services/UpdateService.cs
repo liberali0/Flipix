@@ -30,6 +30,7 @@ public static class UpdateService
     /// <summary>새 버전이 있으면 그 정보를, 없거나 확인할 수 없으면 null.</summary>
     public static async Task<UpdateInfo?> CheckAsync(CancellationToken ct = default)
     {
+        TouchStamp(); // 우클릭 메뉴는 이 파일이 하루 지났을 때만 다시 확인을 부탁한다(인터넷이 없어도 하루에 한 번)
         using var req = new HttpRequestMessage(HttpMethod.Get, UpdateFeed.LatestReleaseApi);
         req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         using var res = await Http.SendAsync(req, ct).ConfigureAwait(false);
@@ -87,6 +88,20 @@ public static class UpdateService
             UseShellExecute = true,
             WorkingDirectory = Path.GetDirectoryName(setupPath)!,
         });
+    }
+
+    /// <summary>셸 확장과 맞춘 파일 이름(core/command_line.h의 kUpdateStampFileName). 설정 파일과 같은 폴더.</summary>
+    public static string StampPath =>
+        Path.Combine(Path.GetDirectoryName(ImageConverter.Core.Settings.SettingsStore.DefaultPath)!, "update-check.stamp");
+
+    private static void TouchStamp()
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(StampPath)!);
+            File.WriteAllText(StampPath, DateTime.UtcNow.ToString("O"));
+        }
+        catch { /* 못 쓰면 다음 변환 때 다시 확인할 뿐 */ }
     }
 
     private static HttpClient CreateClient()

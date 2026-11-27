@@ -108,4 +108,28 @@ public class SettingsStoreTests
         File.WriteAllText(path, "{ \"quickMenu\": null }");
         Assert.Equal(3, new SettingsStore(path).Load().QuickMenu.Formats.Count);
     }
+
+    [Fact]
+    public void Writes_notify_and_update_keys_the_shell_extension_reads()
+    {
+        using var d = new TempDir();
+        var store = new SettingsStore(Path.Combine(d.Path, "s.json"));
+        store.Save(new AppSettings { QuickMenu = { Notify = QuickNotify.Always }, CheckForUpdates = false });
+
+        var json = File.ReadAllText(store.Path);
+
+        Assert.Contains("\"notify\": \"always\"", json);
+        Assert.Contains("\"checkForUpdates\": false", json);
+        var back = store.Load();
+        Assert.Equal(QuickNotify.Always, back.QuickMenu.Notify);
+        Assert.False(back.CheckForUpdates);
+    }
+
+    [Fact]
+    public void Notify_defaults_to_failures_only_and_updates_on()
+    {
+        var s = new AppSettings();
+        Assert.Equal(QuickNotify.Failures, s.QuickMenu.Notify);
+        Assert.True(s.CheckForUpdates);
+    }
 }

@@ -1,5 +1,7 @@
 #include "win/module.h"
 
+#include "core/command_line.h"
+
 #include <knownfolders.h>
 #include <shlobj.h>
 
@@ -85,6 +87,27 @@ std::optional<std::string> ReadSmallFile(const std::wstring& path, DWORD maxByte
 QuickMenuSettings LoadSettings() {
     return LoadQuickMenuSettings(SettingsPathCandidates(LocalAppDataPath(), ModulePath()),
                                  [](const std::wstring& path) { return ReadSmallFile(path); });
+}
+
+bool UpdateCheckDue() {
+    // The stamp sits next to the settings file the app writes (inside the package LocalCache for MSIX).
+    bool found = false;
+    unsigned long long newestAge = 0;
+    FILETIME nowFile{};
+    GetSystemTimeAsFileTime(&nowFile);
+    const ULARGE_INTEGER now{{nowFile.dwLowDateTime, nowFile.dwHighDateTime}};
+    for (const std::wstring& settingsPath : SettingsPathCandidates(LocalAppDataPath(), ModulePath())) {
+        const auto slash = settingsPath.find_last_of(L"\\/");
+        if (slash == std::wstring::npos) continue;
+        const std::wstring stamp = settingsPath.substr(0, slash + 1) + std::wstring(kUpdateStampFileName);
+        WIN32_FILE_ATTRIBUTE_DATA data{};
+        if (!GetFileAttributesExW(stamp.c_str(), GetFileExInfoStandard, &data)) continue;
+        const ULARGE_INTEGER written{{data.ftLastWriteTime.dwLowDateTime, data.ftLastWriteTime.dwHighDateTime}};
+        const unsigned long long age = now.QuadPart > written.QuadPart ? (now.QuadPart - written.QuadPart) / 10000000ULL : 0;
+        if (!found || age < newestAge) newestAge = age;
+        found = true;
+    }
+    return IsUpdateCheckDue(found, newestAge);
 }
 
 }  // namespace qic::win

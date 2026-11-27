@@ -109,8 +109,30 @@ struct WatchContext {
     Handle errors;  // stderr capture, delete-on-close; may be empty
     std::wstring responseFile;
     bool reportFailures = false;
+    std::wstring followUpExe;
+    bool notifySuccess = false;
+    bool checkForUpdates = false;
+    std::size_t fileCount = 0;
     HMODULE pinnedModule = nullptr;
 };
+
+bool StartVisible(std::wstring& commandLine, const std::wstring& workingDirectory, PROCESS_INFORMATION& process);
+
+// The app in background mode: a small notice in the corner, then it exits by itself.
+void StartFollowUp(const WatchContext& context, bool succeeded) {
+    if (context.followUpExe.empty()) return;
+    const std::vector<std::wstring> args =
+        FollowUpArguments(context.notifySuccess && succeeded, context.fileCount, context.checkForUpdates);
+    if (args.empty()) return;
+    if (GetFileAttributesW(context.followUpExe.c_str()) == INVALID_FILE_ATTRIBUTES) return;
+    LaunchPlan plan = BuildLaunchPlan(context.followUpExe, args, {}, L"");
+    const std::wstring folder = context.followUpExe.substr(0, context.followUpExe.find_last_of(L"\\/"));
+    PROCESS_INFORMATION process{};
+    if (StartVisible(plan.commandLine, folder, process)) {
+        CloseHandle(process.hThread);
+        CloseHandle(process.hProcess);
+    }
+}
 
 DWORD WINAPI WatchProcess(void* parameter) {
     std::unique_ptr<WatchContext> context(static_cast<WatchContext*>(parameter));
@@ -122,6 +144,7 @@ DWORD WINAPI WatchProcess(void* parameter) {
         const std::string stderrText = context->errors ? ReadFromStart(context->errors.Get()) : std::string();
         ShowMessage(FormatFailureMessage(exitCode, stderrText), MB_ICONWARNING);
     }
+    StartFollowUp(*context, exitCode == 0);
     HMODULE module = context->pinnedModule;
     context.reset();
     ReleaseObjectRef();
@@ -241,6 +264,10 @@ HRESULT Launch(const LaunchRequest& request) {
     context->errors.Reset(errors.Release());
     context->responseFile = plan.usesResponseFile ? responseFile : std::wstring();
     context->reportFailures = request.reportFailures;
+    context->followUpExe = request.followUpExe;
+    context->notifySuccess = request.notifySuccess;
+    context->checkForUpdates = request.checkForUpdates;
+    context->fileCount = request.files.size();
     // Keep this DLL loaded until the watcher exits, even if Explorer releases every object.
     if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, reinterpret_cast<LPCWSTR>(&WatchProcess),
                             &context->pinnedModule)) {

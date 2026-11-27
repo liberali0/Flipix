@@ -39,4 +39,7 @@ std::optional<std::string> ReadSmallFile(const std::wstring& path, DWORD maxByte
 // The user's quick-menu settings (defaults when no settings file exists).
 QuickMenuSettings LoadSettings();
 
+// True when the app last looked for a new version a day ago or more (see qic::IsUpdateCheckDue).
+bool UpdateCheckDue();
+
 }  // namespace qic::win

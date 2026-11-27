@@ -79,6 +79,7 @@ public sealed class MainViewModel : ObservableObject
         UpdateCommand = new RelayCommand(() => _ = UpdateAsync(), () => _update != null && !_isUpdating);
         CheckUpdatesCommand = new RelayCommand(() => _ = CheckForUpdatesAsync(userAsked: true), () => !_isUpdating);
         CreateShortcutCommand = new RelayCommand(CreateShortcut);
+        OpenAdvancedSettingsCommand = new RelayCommand(OpenAdvancedSettings, () => CanEdit);
     }
 
     public ObservableCollection<ConversionJob> Jobs { get; } = new();
@@ -148,6 +149,7 @@ public sealed class MainViewModel : ObservableObject
     public ICommand UpdateCommand { get; }
     public ICommand CheckUpdatesCommand { get; }
     public ICommand CreateShortcutCommand { get; }
+    public ICommand OpenAdvancedSettingsCommand { get; }
 
     /// <summary>개발자에게 연락하는 곳(X 프로필). 사용자가 2026-11-25 지정.</summary>
     public const string ContactUrl = "https://x.com/Liberali_0";
@@ -406,17 +408,14 @@ public sealed class MainViewModel : ObservableObject
     public bool UpdateAvailable => _update != null;
     public string UpdateButtonText => _update is null ? "" : $"새 버전 v{_update.Version} 업데이트";
 
-    /// <summary>Workshop을 열 때 새 버전 확인. 메뉴에서 끄고 켠다.</summary>
-    public bool CheckForUpdatesOnStart
+    private void OpenAdvancedSettings()
     {
-        get => _settings.CheckForUpdates;
-        set
-        {
-            if (_settings.CheckForUpdates == value) return;
-            _settings.CheckForUpdates = value;
-            Raise();
-            try { _store.Save(_settings); } catch { /* 저장 실패는 무시 */ }
-        }
+        var win = new AdvancedSettingsWindow(_settings) { Owner = System.Windows.Application.Current.MainWindow };
+        if (win.ShowDialog() != true) return;
+        _settings.QuickMenu.Notify = win.Notify;
+        _settings.CheckForUpdates = win.CheckForUpdates;
+        try { _store.Save(_settings); StatusText = "상세 설정을 저장했습니다."; }
+        catch (Exception ex) { StatusText = "설정 저장 실패: " + ex.Message; }
     }
 
     /// <summary>앱 시작 때 한 번. 설정이 꺼져 있으면 아무것도 하지 않는다.</summary>
