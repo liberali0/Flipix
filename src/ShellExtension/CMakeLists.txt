@@ -73,24 +73,24 @@ add_test(NAME core_tests COMMAND qic_core_tests)
 
 if(WIN32)
   # The shell extension itself.
-  add_library(ImageConverter.ShellExtension SHARED
+  add_library(Flipix.ShellExtension SHARED
     win/dllmain.cpp
     win/explorer_command.cpp
     win/launcher.cpp
     win/module.cpp
     win/exports.def
   )
-  target_link_libraries(ImageConverter.ShellExtension PRIVATE
+  target_link_libraries(Flipix.ShellExtension PRIVATE
     qic_core shell32 shlwapi ole32 advapi32 user32)
-  set_target_properties(ImageConverter.ShellExtension PROPERTIES PREFIX "")
+  set_target_properties(Flipix.ShellExtension PROPERTIES PREFIX "")
   if(MSVC)
     # DLL planting guard: the DLL's own imports resolve only from System32, never from the
     # current folder of whatever process loaded it (LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x800).
-    target_link_options(ImageConverter.ShellExtension PRIVATE /DEPENDENTLOADFLAG:0x800)
+    target_link_options(Flipix.ShellExtension PRIVATE /DEPENDENTLOADFLAG:0x800)
   endif()
   if(MINGW)
     # No libstdc++/libgcc DLLs next to a DLL that Explorer loads.
-    target_link_options(ImageConverter.ShellExtension PRIVATE -static -static-libgcc -static-libstdc++)
+    target_link_options(Flipix.ShellExtension PRIVATE -static -static-libgcc -static-libstdc++)
   endif()
 
   # Fake engine CLI and app for the smoke tests, copied next to the DLL under the real names.
@@ -101,9 +101,9 @@ if(WIN32)
   endif()
   add_custom_command(TARGET qic_fake_cli POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:qic_fake_cli>
-            $<TARGET_FILE_DIR:ImageConverter.ShellExtension>/imgconv.exe
+            $<TARGET_FILE_DIR:Flipix.ShellExtension>/imgconv.exe
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:qic_fake_cli>
-            $<TARGET_FILE_DIR:ImageConverter.ShellExtension>/ImageConverter.exe)
+            $<TARGET_FILE_DIR:Flipix.ShellExtension>/Flipix.exe)
 
   add_executable(qic_shell_smoke_tests tests/test_main.cpp tests/win/smoke_test.cpp)
   target_link_libraries(qic_shell_smoke_tests PRIVATE qic_core shell32 ole32 advapi32)
@@ -111,7 +111,7 @@ if(WIN32)
   if(MINGW)
     target_link_options(qic_shell_smoke_tests PRIVATE -static)
   endif()
-  add_dependencies(qic_shell_smoke_tests ImageConverter.ShellExtension qic_fake_cli)
+  add_dependencies(qic_shell_smoke_tests Flipix.ShellExtension qic_fake_cli)
   add_test(NAME shell_smoke_tests COMMAND qic_shell_smoke_tests
-           WORKING_DIRECTORY $<TARGET_FILE_DIR:ImageConverter.ShellExtension>)
+           WORKING_DIRECTORY $<TARGET_FILE_DIR:Flipix.ShellExtension>)
 endif()

@@ -23,7 +23,7 @@
 
 ## 3. 실행 중
 
-- 우클릭 메뉴 DLL은 자기와 같은 폴더의 `imgconv.exe`/`ImageConverter.exe`만 따옴표로 감싼 전체 경로로 실행합니다(PATH나 현재 폴더에서 찾지 않음).
+- 우클릭 메뉴 DLL은 자기와 같은 폴더의 `imgconv.exe`/`Flipix.exe`만 따옴표로 감싼 전체 경로로 실행합니다(PATH나 현재 폴더에서 찾지 않음).
 - DLL이 필요로 하는 Windows DLL은 System32에서만 불러옵니다(`/DEPENDENTLOADFLAG:0x800`, DLL 바꿔치기 방지).
 - DLL은 ASLR, DEP, Control Flow Guard, CET 그림자 스택을 켜고 빌드하며 CI가 매번 켜져 있는지 확인합니다(`packaging/Test-PeHardening.ps1`).
 - `settings.json`에서 읽는 값은 허용 목록(png, jpg, bmp, tiff, webp, avif, true/false)만 받습니다. 누가 파일을 고쳐도 변환 프로그램에 다른 명령줄 옵션을 끼워 넣을 수 없습니다.

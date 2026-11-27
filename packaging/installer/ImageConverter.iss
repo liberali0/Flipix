@@ -10,10 +10,13 @@
   #define OutDir "..\out"
 #endif
 #define AppName "Flipix"
-#define AppExe "ImageConverter.exe"
-#define ShellDll "ImageConverter.ShellExtension.dll"
+#define AppExe "Flipix.exe"
+#define ShellDll "Flipix.ShellExtension.dll"
+; v0.1.4까지 쓰던 이름. 업데이트할 때 예전 파일을 정리하는 데 씁니다.
+#define OldAppExe "ImageConverter.exe"
+#define OldShellDll "ImageConverter.ShellExtension.dll"
 ; ARM64 PC용 우클릭 메뉴 DLL. 설치할 때 위 이름으로 바꿔 넣습니다(탐색기가 ARM64라 x64 DLL은 못 불러옴).
-#define ShellDllArm64 "ImageConverter.ShellExtension.arm64.dll"
+#define ShellDllArm64 "Flipix.ShellExtension.arm64.dll"
 #define KoreanIsl AddBackslash(CompilerPath) + "Languages\Korean.isl"
 
 [Setup]
@@ -22,7 +25,7 @@ AppId={{6B0E5F52-3C1B-4D52-9E58-4F1C2A7D9A10}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher=Flipix
-DefaultDirName={autopf}\QuickImageConverter
+DefaultDirName={autopf}\Flipix
 DefaultGroupName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
 SetupIconFile=..\..\assets\branding\flipix.ico
@@ -37,7 +40,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 DisableProgramGroupPage=yes
-; 설치 위치 화면은 [Code]의 ShouldSkipPage가 정합니다: 새로 설치할 때와 "수정 > 설치 위치 변경"일 때만 보입니다.
+; 설치 위치 화면은 [Code]의 ShouldSkipPage가 정합니다: 새로 설치할 때와 "수정 > 설치 위치 변경"일 때만 보입니다. 업데이트는 "업데이트" 확인 화면 하나만 보입니다.
 DisableDirPage=no
 CloseApplications=yes
 ; 업데이트할 때 닫을 프로그램은 앱·CLI(exe)만 찾습니다. 우클릭 메뉴 DLL은 탐색기가 물고 있어서
@@ -63,6 +66,15 @@ english.ModifyDesc=Choose what to do with the installed {#AppName}.
 english.ModifyRepair=Repair (reinstall in the current location, keeping your settings)
 english.ModifyMove=Change the install location
 english.ModifyNested=Choose a folder that is not inside the current install folder (or the other way around).
+english.UpdTitle=Update {#AppName}
+english.UpdReadyTitle=Ready to update
+english.UpdReadyDesc={#AppName} is already installed. Only the update will be installed.
+english.UpdReadyMemo=Update {#AppName} %1 to %2.%n%nYour settings and right-click menu stay the same.
+english.UpdButton=&Update
+english.UpdInstallingTitle=Updating
+english.UpdInstallingDesc=Please wait while {#AppName} is updated to %1.
+english.UpdDoneTitle=Update complete
+english.UpdDoneText={#AppName} has been updated to %1.
 #if FileExists(KoreanIsl)
 korean.TaskContextMenu=우클릭 메뉴에 "빠른 이미지 포맷 변환" 추가
 korean.TaskContextMenuNote=Windows 11에서는 첫 화면에 나타납니다(인증서 신뢰 등록에 관리자 확인 한 번 필요, 거절하면 "더 많은 옵션 표시" 안).
@@ -74,6 +86,15 @@ korean.ModifyDesc=설치된 {#AppName}를 어떻게 할지 고르세요.
 korean.ModifyRepair=복구 (지금 위치에 다시 설치, 설정은 그대로)
 korean.ModifyMove=설치 위치 변경
 korean.ModifyNested=지금 설치 폴더 안쪽(또는 바깥쪽 상위 폴더)이 아닌 다른 폴더를 고르세요.
+korean.UpdTitle={#AppName} 업데이트
+korean.UpdReadyTitle=업데이트 준비 완료
+korean.UpdReadyDesc={#AppName}가 이미 설치돼 있어서 업데이트만 진행합니다.
+korean.UpdReadyMemo={#AppName} %1 → %2 업데이트%n%n설정과 우클릭 메뉴는 그대로 유지됩니다.
+korean.UpdButton=업데이트(&U)
+korean.UpdInstallingTitle=업데이트하는 중
+korean.UpdInstallingDesc={#AppName}를 %1(으)로 업데이트하고 있습니다. 잠시 기다려 주세요.
+korean.UpdDoneTitle=업데이트 완료
+korean.UpdDoneText={#AppName}가 %1(으)로 업데이트되었습니다.
 #endif
 
 [Tasks]
@@ -86,7 +107,7 @@ Source: "{#SourceDir}\*"; Excludes: "\{#ShellDll},\{#ShellDllArm64}"; DestDir: "
 ; 우클릭 메뉴 DLL은 PC의 CPU에 맞는 것 하나만 넣습니다. 앱과 CLI는 x64이며 ARM64 Windows 11에서는 x64 에뮬레이션으로 돕니다.
 Source: "{#SourceDir}\{#ShellDll}"; DestDir: "{app}"; Flags: ignoreversion; Check: not IsArm64
 Source: "{#SourceDir}\{#ShellDllArm64}"; DestDir: "{app}"; DestName: "{#ShellDll}"; Flags: ignoreversion; Check: IsArm64
-; Win11 첫 화면 메뉴 등록 도우미. 메뉴 패키지(ImageConverter.ContextMenu.msix)와 인증서(.cer)는 release.yml이 publish 폴더에 넣습니다.
+; Win11 첫 화면 메뉴 등록 도우미. 메뉴 패키지(Flipix.ContextMenu.msix)와 인증서(.cer)는 release.yml이 publish 폴더에 넣습니다.
 Source: "ContextMenu.ps1"; DestDir: "{app}"; Flags: ignoreversion
 ; Windows 설정 > 앱의 [수정]이 실행할 설치 파일 사본. 설치 위치를 옮길 때도 지워지지 않도록 설치 폴더 밖에 둡니다.
 Source: "{srcexe}"; DestDir: "{code:InstallerDir}"; DestName: "Flipix-Setup.exe"; Flags: external ignoreversion; Check: NotRunningFromInstallerCopy
@@ -107,14 +128,20 @@ Filename: "{app}\{#AppExe}"; Description: "{cm:RunApp}"; Flags: nowait postinsta
 ; Workshop의 [업데이트]가 조용히 실행한 경우(/SILENT /UPDATE): 끝나면 Workshop을 다시 엽니다.
 Filename: "{app}\{#AppExe}"; Flags: nowait runasoriginaluser; Check: IsAutoUpdate
 
+[InstallDelete]
+; v0.1.4까지의 예전 이름 파일(같은 폴더에 업데이트할 때). 예전 메뉴 DLL은 PrepareToInstall이 이름을 바꿔 둡니다.
+Type: files; Name: "{app}\{#OldAppExe}"
+Type: files; Name: "{app}\ImageConverter.dll"
+Type: files; Name: "{app}\ImageConverter.pdb"
+Type: files; Name: "{app}\ImageConverter.deps.json"
+Type: files; Name: "{app}\ImageConverter.runtimeconfig.json"
+Type: files; Name: "{app}\ImageConverter.ContextMenu.msix"
+Type: files; Name: "{app}\ImageConverter.cer"
+
 [UninstallDelete]
 ; 업데이트 때 이름을 바꿔 둔 예전 우클릭 메뉴 DLL
 Type: files; Name: "{app}\*.dll.old"
 Type: filesandordirs; Name: "{code:InstallerDir}"
-
-[UninstallRun]
-Filename: "{sys}\WindowsPowerShell\v1.0\powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""{app}\ContextMenu.ps1"" -Action Unregister"; Flags: runhidden; RunOnceId: "UnregMenuPackage"
-Filename: "{sys}\regsvr32.exe"; Parameters: "/u /s ""{app}\{#ShellDll}"""; Flags: runhidden; RunOnceId: "UnregShell"
 
 [Code]
 // ---- 업데이트 · 수정 ----
@@ -131,6 +158,8 @@ var
   OldDir: string;        // 지금 설치 위치(업데이트·수정 전)
   ModifyPage: TInputOptionWizardPage;
   UserLinkExisted: Boolean;
+  Migrating: Boolean;    // 예전 기본 폴더(QuickImageConverter)에서 Flipix 폴더로 옮기는 업데이트
+  OldVersion: string;    // 지금 설치된 버전(업데이트 화면에 표시)
 
 function HasParam(Name: string): Boolean;
 var
@@ -183,6 +212,14 @@ begin
   IsUpgrade := RegQueryStringValue(HKA, UninstKey, 'Inno Setup: App Path', OldDir) and DirExists(OldDir);
   IsModify := IsUpgrade and HasParam('/MODIFY');
   UserLinkExisted := FileExists(ExpandConstant('{userdesktop}\{#AppName}.lnk'));
+  // v0.1.4까지의 기본 폴더 이름(QuickImageConverter)이면 업데이트하면서 옆의 Flipix 폴더로 옮깁니다.
+  // 사용자가 직접 고른 다른 폴더는 그대로 둡니다.
+  Migrating := IsUpgrade and not IsModify and
+    (CompareText(ExtractFileName(RemoveBackslashUnlessRoot(OldDir)), 'QuickImageConverter') = 0);
+  if Migrating then
+    WizardForm.DirEdit.Text := AddBackslash(ExtractFileDir(RemoveBackslashUnlessRoot(OldDir))) + 'Flipix';
+  if not RegQueryStringValue(HKA, UninstKey, 'DisplayVersion', OldVersion) then OldVersion := '?';
+  if IsUpgrade and not IsModify then WizardForm.Caption := CustomMessage('UpdTitle');
   ModifyPage := CreateInputOptionPage(wpWelcome, CustomMessage('ModifyTitle'), CustomMessage('ModifyDesc'), '', True, False);
   ModifyPage.Add(CustomMessage('ModifyRepair'));
   ModifyPage.Add(CustomMessage('ModifyMove'));
@@ -201,8 +238,33 @@ begin
     else if PageID = wpSelectTasks then Result := True;
   end
   else if IsUpgrade then
-    // 업데이트: 아무것도 묻지 않고 바로 설치합니다.
-    Result := (PageID = wpSelectDir) or (PageID = wpSelectTasks) or (PageID = wpReady);
+    // 업데이트: 위치·추가 작업은 묻지 않고, "업데이트" 확인 화면 하나만 보여 줍니다(조용한 실행은 화면 없음).
+    Result := (PageID = wpSelectDir) or (PageID = wpSelectTasks);
+end;
+
+// 업데이트일 때는 새로 설치할 때와 구분되도록 제목·단추·완료 문구를 "업데이트"로 바꾸고 버전을 보여 줍니다.
+procedure CurPageChanged(CurPageID: Integer);
+begin
+  if not IsUpgrade or IsModify then exit;
+  if CurPageID = wpReady then
+  begin
+    WizardForm.PageNameLabel.Caption := CustomMessage('UpdReadyTitle');
+    WizardForm.PageDescriptionLabel.Caption := CustomMessage('UpdReadyDesc');
+    WizardForm.ReadyLabel.Visible := False;
+    WizardForm.ReadyMemo.Visible := True;
+    WizardForm.ReadyMemo.Lines.Text := FmtMessage(CustomMessage('UpdReadyMemo'), [OldVersion, '{#AppVersion}']);
+    WizardForm.NextButton.Caption := CustomMessage('UpdButton');
+  end
+  else if CurPageID = wpInstalling then
+  begin
+    WizardForm.PageNameLabel.Caption := CustomMessage('UpdInstallingTitle');
+    WizardForm.PageDescriptionLabel.Caption := FmtMessage(CustomMessage('UpdInstallingDesc'), ['{#AppVersion}']);
+  end
+  else if CurPageID = wpFinished then
+  begin
+    WizardForm.FinishedHeadingLabel.Caption := CustomMessage('UpdDoneTitle');
+    WizardForm.FinishedLabel.Caption := FmtMessage(CustomMessage('UpdDoneText'), ['{#AppVersion}']);
+  end;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;
@@ -277,16 +339,21 @@ begin
   end;
 end;
 
+procedure SetAsideDll(Dll: string);
+begin
+  if FileExists(Dll) and not DeleteFile(Dll) then
+    RenameFile(Dll, Dll + '.' + GetDateTimeString('yyyymmddhhnnss', #0, #0) + '.old');
+end;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 var
-  Dir, Dll: string;
+  Dir: string;
 begin
   Result := '';
   Dir := ExpandConstant('{app}');
-  Dll := Dir + '\{#ShellDll}';
   DeleteOldShellDlls(Dir);
-  if FileExists(Dll) and not DeleteFile(Dll) then
-    RenameFile(Dll, Dll + '.' + GetDateTimeString('yyyymmddhhnnss', #0, #0) + '.old');
+  SetAsideDll(Dir + '\{#ShellDll}');
+  SetAsideDll(Dir + '\{#OldShellDll}'); // v0.1.4까지의 이름
 end;
 
 // ---- 우클릭 메뉴 등록 ----
@@ -358,7 +425,7 @@ begin
   end;
 
   TopMenu := False;
-  if IsWindows11 and FileExists(ExpandConstant('{app}\ImageConverter.ContextMenu.msix')) then
+  if IsWindows11 and FileExists(ExpandConstant('{app}\Flipix.ContextMenu.msix')) then
   begin
     if not RunMenuScript('IsTrusted') then
       TrustMenuCertificate; // 관리자 확인 창(UAC). 거절하면 아래 확인에서 걸러짐
@@ -386,25 +453,31 @@ begin
   RegWriteDWordValue(HKA, UninstKey, 'NoModify', 0);
 end;
 
-// 설치 위치를 옮겼으면 예전 폴더를 정리합니다. 탐색기가 아직 쓰는 우클릭 메뉴 DLL처럼 지금 지울 수 없는 파일이
-// 남으면, 다음에 로그인할 때 한 번 지웁니다.
-procedure CleanUpOldDir;
+// 다음에 로그인할 때 폴더를 한 번 지웁니다(탐색기가 쓰던 우클릭 메뉴 DLL처럼 지금은 지울 수 없는 파일용).
+procedure RemoveDirAtNextLogon(ValueName, Dir: string);
+var
+  Root: Integer;
+begin
+  if IsAdminInstallMode then Root := HKEY_LOCAL_MACHINE else Root := HKEY_CURRENT_USER;
+  RegWriteStringValue(Root, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', ValueName,
+    '"' + ExpandConstant('{cmd}') + '" /c rmdir /s /q "' + RemoveBackslashUnlessRoot(Dir) + '"');
+end;
+
+// 설치 위치를 옮겼으면 예전 폴더를 정리합니다. 지금 지울 수 없는 파일이 남으면 다음에 로그인할 때 한 번 지웁니다.
+// Later가 True면(예전 이름 폴더에서 옮기는 업데이트) 지금은 지우지 않고 로그인할 때 지웁니다. 탐색기에 이미
+// 올라가 있는 예전 우클릭 메뉴가 그때까지 예전 폴더의 프로그램을 실행하기 때문입니다.
+procedure CleanUpOldDir(Later: Boolean);
 var
   NewDir: string;
-  Root: Integer;
 begin
   NewDir := ExpandConstant('{app}');
   if (OldDir = '') or (NormDir(OldDir) = NormDir(NewDir)) or DirsOverlap(OldDir, NewDir) then exit;
   // 안전장치: Flipix가 설치돼 있던 폴더처럼 보일 때만, 드라이브 루트는 절대 지우지 않습니다.
-  if (Length(RemoveBackslashUnlessRoot(OldDir)) <= 3) or not FileExists(AddBackslash(OldDir) + '{#AppExe}') then exit;
+  if (Length(RemoveBackslashUnlessRoot(OldDir)) <= 3) or
+     not (FileExists(AddBackslash(OldDir) + '{#AppExe}') or FileExists(AddBackslash(OldDir) + '{#OldAppExe}')) then exit;
   RemoveFromPath(RemoveBackslashUnlessRoot(OldDir));
-  DelTree(OldDir, True, True, True);
-  if DirExists(OldDir) then
-  begin
-    if IsAdminInstallMode then Root := HKEY_LOCAL_MACHINE else Root := HKEY_CURRENT_USER;
-    RegWriteStringValue(Root, 'Software\Microsoft\Windows\CurrentVersion\RunOnce', 'FlipixRemoveOldFolder',
-      '"' + ExpandConstant('{cmd}') + '" /c rmdir /s /q "' + RemoveBackslashUnlessRoot(OldDir) + '"');
-  end;
+  if not Later then DelTree(OldDir, True, True, True);
+  if DirExists(OldDir) then RemoveDirAtNextLogon('FlipixRemoveOldFolder', OldDir);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -412,5 +485,85 @@ begin
   if CurStep <> ssPostInstall then exit;
   UpdateContextMenu;
   EnableModifyButton;
-  if IsModify then CleanUpOldDir;
+  if IsModify then CleanUpOldDir(False)
+  else if Migrating then CleanUpOldDir(True);
+end;
+
+// ---- 제거 ----
+// 제거하면 남는 것 없이 지웁니다: 프로그램 폴더, 설정(%LOCALAPPDATA%\Flipix, 예전 QuickImageConverter), 임시 파일.
+// 탐색기가 물고 있는 우클릭 메뉴 DLL은 지울 수 없어서 "직접 지우세요" 안내가 뜨므로, 제거를 시작하기 전에
+// 프로그램 폴더 밖으로 옮겨 두고 다음에 로그인할 때 지웁니다.
+procedure KillRunning(Exe: string);
+var
+  Code: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/f /im "' + Exe + '"', '', SW_HIDE, ewWaitUntilTerminated, Code);
+end;
+
+// 지울 수 없는 DLL을 프로그램 폴더 밖의 정리용 폴더로 옮깁니다. 이름 바꾸기는 같은 드라이브에서만 되므로
+// 프로그램 폴더 옆(같은 드라이브)에 만듭니다.
+procedure MoveLockedDlls(AppDir: string);
+var
+  Rec: TFindRec;
+  Trash, F: string;
+begin
+  Trash := AddBackslash(ExtractFileDir(AppDir)) + '.Flipix-removed-' + GetDateTimeString('yyyymmddhhnnss', #0, #0);
+  if FindFirst(AppDir + '\*.dll*', Rec) then
+  begin
+    try
+      repeat
+        F := AppDir + '\' + Rec.Name;
+        if (Rec.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0) and not DeleteFile(F) then
+        begin
+          if not DirExists(Trash) then CreateDir(Trash);
+          RenameFile(F, Trash + '\' + Rec.Name);
+        end;
+      until not FindNext(Rec);
+    finally
+      FindClose(Rec);
+    end;
+  end;
+  if DirExists(Trash) then
+  begin
+    DelTree(Trash, True, True, True);
+    if DirExists(Trash) then RemoveDirAtNextLogon('FlipixRemoveLeftovers', Trash);
+  end;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var
+  AppDir: string;
+  Code: Integer;
+begin
+  AppDir := RemoveBackslashUnlessRoot(ExpandConstant('{app}'));
+  if CurUninstallStep = usUninstall then
+  begin
+    KillRunning('{#AppExe}');
+    KillRunning('imgconv.exe');
+    // 우클릭 메뉴 등록 해제(Win11 첫 화면 메뉴 패키지와 기존 방식 둘 다). DLL을 옮기기 전에 해야 합니다.
+    Exec(PowerShellExe, '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "' + AppDir +
+      '\ContextMenu.ps1" -Action Unregister', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    if FileExists(AppDir + '\{#ShellDll}') then
+      Exec(ExpandConstant('{sys}\regsvr32.exe'), '/u /s "' + AppDir + '\{#ShellDll}"', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    MoveLockedDlls(AppDir);
+  end
+  else if CurUninstallStep = usPostUninstall then
+  begin
+    RemoveFromPath(AppDir);
+    DelTree(ExpandConstant('{localappdata}\Flipix'), True, True, True);
+    DelTree(ExpandConstant('{localappdata}\QuickImageConverter'), True, True, True);
+    DelTree(AddBackslash(GetTempDir) + 'Flipix', True, True, True);
+    DelTree(AddBackslash(GetTempDir) + 'Flipix-Update', True, True, True);
+    if IsAdminInstallMode then DelTree(ExpandConstant('{commonappdata}\Flipix'), True, True, True);
+    // 프로그램 폴더가 남았으면 마저 지웁니다. 안전장치: 폴더 이름이 Flipix(또는 예전 이름)일 때만 통째로 지우고,
+    // 사용자가 고른 다른 이름의 폴더(다른 파일과 함께 쓰는 폴더일 수 있음)는 비어 있을 때만 지웁니다.
+    if DirExists(AppDir) and not ((CompareText(ExtractFileName(AppDir), 'Flipix') = 0) or
+       (CompareText(ExtractFileName(AppDir), 'QuickImageConverter') = 0)) then
+      RemoveDir(AppDir)
+    else if DirExists(AppDir) and (Length(AppDir) > 3) then
+    begin
+      DelTree(AppDir, True, True, True);
+      if DirExists(AppDir) then RemoveDirAtNextLogon('FlipixRemoveFolder', AppDir);
+    end;
+  end;
 end;

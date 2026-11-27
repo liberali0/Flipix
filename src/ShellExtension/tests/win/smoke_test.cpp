@@ -1,7 +1,7 @@
 // End-to-end check of the real DLL through the same COM calls Explorer makes, using real
 // shell items for files in a temporary folder. Runs on Windows only (CI: windows-latest).
 // The working directory is the DLL's folder, where fake_cli.exe was copied as imgconv.exe and
-// ImageConverter.exe.
+// Flipix.exe.
 #include <windows.h>
 
 #include <shlobj.h>
@@ -48,7 +48,7 @@ Environment& Env() {
     static Environment env = [] {
         CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
         Environment e;
-        e.dllPath = CurrentDirectory() + L"\\ImageConverter.ShellExtension.dll";
+        e.dllPath = CurrentDirectory() + L"\\Flipix.ShellExtension.dll";
         wchar_t temp[MAX_PATH] = {};
         GetTempPathW(MAX_PATH, temp);
         // %TEMP% may be an 8.3 short path (C:\Users\RUNNER~1\...); shell items report long paths.
@@ -156,16 +156,16 @@ std::vector<std::string> TakeLog() {
 
 void ClearSettings() {
     // Default settings, except the language: CI runs on English Windows and these tests check the Korean text.
-    CreateDirectoryW((Env().localAppData + L"\\QuickImageConverter").c_str(), nullptr);
-    WriteFileUtf8(Env().localAppData + L"\\QuickImageConverter\\settings.json", R"({"language":"korean"})");
+    CreateDirectoryW((Env().localAppData + L"\\Flipix").c_str(), nullptr);
+    WriteFileUtf8(Env().localAppData + L"\\Flipix\\settings.json", R"({"language":"korean"})");
     // A fresh update stamp: no follow-up app start after a conversion, so the log holds only the CLI call.
-    CreateDirectoryW((Env().localAppData + L"\\QuickImageConverter").c_str(), nullptr);
-    WriteFileUtf8(Env().localAppData + L"\\QuickImageConverter\\update-check.stamp", "now");
+    CreateDirectoryW((Env().localAppData + L"\\Flipix").c_str(), nullptr);
+    WriteFileUtf8(Env().localAppData + L"\\Flipix\\update-check.stamp", "now");
 }
 
 void WriteSettings(const std::string& json) {
-    CreateDirectoryW((Env().localAppData + L"\\QuickImageConverter").c_str(), nullptr);
-    WriteFileUtf8(Env().localAppData + L"\\QuickImageConverter\\settings.json", json);
+    CreateDirectoryW((Env().localAppData + L"\\Flipix").c_str(), nullptr);
+    WriteFileUtf8(Env().localAppData + L"\\Flipix\\settings.json", json);
 }
 
 std::wstring ReadRegistryString(const std::wstring& subKey, const wchar_t* name) {
@@ -279,7 +279,7 @@ TEST(Smoke_DetailsOpensAppWithSelectedImages) {
     const std::wstring jpg = MakeFile(L"b.jpg");
     const auto items = ShellItems({MakeFile(L"notes.txt"), jpg});
     CHECK_EQ(details->Invoke(items.Get(), nullptr), S_OK);
-    CHECK_EQ(TakeLog(), (std::vector<std::string>{"ImageConverter.exe", qic::ToUtf8(jpg)}));
+    CHECK_EQ(TakeLog(), (std::vector<std::string>{"Flipix.exe", qic::ToUtf8(jpg)}));
 }
 
 TEST(Smoke_LargeSelectionGoesThroughResponseFile) {

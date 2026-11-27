@@ -56,7 +56,7 @@
 <com:Extension Category="windows.comServer">
   <com:ComServer>
     <com:SurrogateServer DisplayName="빠른 이미지 포맷 변환 메뉴">
-      <com:Class Id="233119CD-5628-4066-AB18-D528BC05C51F" Path="ImageConverter.ShellExtension.dll" ThreadingModel="STA" />
+      <com:Class Id="233119CD-5628-4066-AB18-D528BC05C51F" Path="Flipix.ShellExtension.dll" ThreadingModel="STA" />
     </com:SurrogateServer>
   </com:ComServer>
 </com:Extension>

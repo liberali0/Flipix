@@ -1,4 +1,4 @@
-# 우클릭 빠른 변환 메뉴 (ImageConverter.ShellExtension)
+# 우클릭 빠른 변환 메뉴 (Flipix.ShellExtension)
 
 탐색기에서 이미지 파일을 우클릭하면 **빠른 이미지 포맷 변환** 하위 메뉴를 보여 주는 네이티브 셸 확장입니다.
 
@@ -13,7 +13,7 @@
 - 하위 메뉴에 뜨는 포맷과 순서, `자세히...` 표시 여부는 앱의 설정 화면에서 고릅니다.
 - 선택한 파일이 모두 이미 그 포맷이면 그 항목은 숨겨집니다(PNG만 골랐으면 `to PNG` 없음). 이미지가 아닌 파일만 고르면 메뉴 전체가 숨겨집니다.
 - `to …`는 엔진 CLI(`imgconv.exe`)를 창 없이 실행하고, 결과 파일은 원본 옆에 생깁니다. 실패한 파일이 있으면 CLI의 `ERROR` 줄을 메시지 창으로 보여 줍니다.
-- `자세히...`는 Flipix Workshop 앱(`ImageConverter.exe`)을 선택한 파일과 함께 엽니다.
+- `자세히...`는 Flipix Workshop 앱(`Flipix.exe`)을 선택한 파일과 함께 엽니다.
 
 ## 구조
 
@@ -32,7 +32,7 @@ C#이 아니라 C++인 이유: 탐색기(explorer.exe) 안에 .NET 런타임을 
 cmake -S src/ShellExtension -B build/shell -A x64
 cmake --build build/shell --config Release
 ctest --test-dir build/shell -C Release --output-on-failure
-# 결과: build/shell/Release/ImageConverter.ShellExtension.dll
+# 결과: build/shell/Release/Flipix.ShellExtension.dll
 # ARM64 PC용: -A ARM64 (ARM64 탐색기는 ARM64 DLL만 불러옵니다. 앱과 CLI는 x64 에뮬레이션으로 실행)
 ```
 
@@ -48,12 +48,12 @@ CI: `.github/workflows/shell-extension.yml` (Linux 단위 테스트 + Windows MS
 
 ## 등록
 
-DLL은 `imgconv.exe`, `ImageConverter.exe`와 **같은 폴더**에 설치해야 합니다(자기 폴더에서 두 exe를 찾습니다).
+DLL은 `imgconv.exe`, `Flipix.exe`와 **같은 폴더**에 설치해야 합니다(자기 폴더에서 두 exe를 찾습니다).
 
 | 설치 방식 | 메뉴 위치 | 등록 방법 |
 |---|---|---|
 | MSIX (Win11 첫 화면 메뉴용 선택 설치) | Windows 11 첫 화면 메뉴 + 추가 옵션 표시 | `packaging/shell-extension/AppxManifest.fragment.xml` 블록을 패키지 매니페스트에 넣습니다. **regsvr32는 쓰지 않습니다**(항목이 두 번 보임). |
-| 설치 마법사(기본), 압축 풀기/개발용 | Windows 10 메뉴, Windows 11 "추가 옵션 표시" | `regsvr32 ImageConverter.ShellExtension.dll` (관리자 권한 불필요, HKCU에만 기록). 제거: `regsvr32 /u ImageConverter.ShellExtension.dll`. |
+| 설치 마법사(기본), 압축 풀기/개발용 | Windows 10 메뉴, Windows 11 "추가 옵션 표시" | `regsvr32 Flipix.ShellExtension.dll` (관리자 권한 불필요, HKCU에만 기록). 제거: `regsvr32 /u Flipix.ShellExtension.dll`. |
 
 Windows 11 첫 화면 메뉴는 패키지 신원이 있는 앱만 쓸 수 있어서 MSIX 설치에서만 나타납니다.
 
@@ -65,8 +65,8 @@ Windows 11 첫 화면 메뉴는 패키지 신원이 있는 앱만 쓸 수 있어
 | 동사 Id | `QuickImageConvert` |
 | 메뉴가 뜨는 확장자 | `.png .jpg .jpeg .jpe .jfif .bmp .dib .tif .tiff .webp .avif .heic .heif` (`core/formats.cpp`) |
 | 변환 | `imgconv.exe convert --to <png\|jpg\|bmp\|tiff\|webp\|avif> <파일...>` 또는 명령줄이 32,000자를 넘으면 `@<목록 파일>`(UTF-8, CRLF, 한 줄 한 경로). 종료 코드 0이 아니면 stderr를 보여 줌. 사양: `docs/cli.md`. |
-| 자세히 | `ImageConverter.exe <파일...>` 또는 `@<목록 파일>` |
-| 설정 | `%LOCALAPPDATA%\QuickImageConverter\settings.json`의 `quickMenu.formats`(순서 = 메뉴 순서), `quickMenu.showDetails`, `quickMenu.deleteOriginal`(true일 때만 `--delete-source`를 붙여 성공한 원본을 휴지통으로). MSIX에서는 `%LOCALAPPDATA%\Packages\<PFN>\LocalCache\Local\QuickImageConverter\settings.json`을 먼저 읽습니다. 파일이 없거나 깨지면 기본값(PNG, JPG, BMP, 자세히). |
+| 자세히 | `Flipix.exe <파일...>` 또는 `@<목록 파일>` |
+| 설정 | `%LOCALAPPDATA%\Flipix\settings.json`의 `quickMenu.formats`(순서 = 메뉴 순서), `quickMenu.showDetails`, `quickMenu.deleteOriginal`(true일 때만 `--delete-source`를 붙여 성공한 원본을 휴지통으로). MSIX에서는 `%LOCALAPPDATA%\Packages\<PFN>\LocalCache\Local\Flipix\settings.json`을 먼저 읽습니다. 파일이 없거나 깨지면 기본값(PNG, JPG, BMP, 자세히). |
 
 HEIC는 엔진이 읽을 수만 있어서 메뉴에 `to HEIC`는 없습니다. 설정에 `heic`가 있어도 무시합니다.
 

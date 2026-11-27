@@ -9,8 +9,8 @@ param([Parameter(Mandatory)][ValidateSet('Trust', 'IsTrusted', 'Register', 'Unre
 $ErrorActionPreference = 'Stop'
 $dir = $PSScriptRoot
 $packageName = 'ImageConverter.QuickConverter.ContextMenu'
-$msix = Join-Path $dir 'ImageConverter.ContextMenu.msix'
-$cer = Join-Path $dir 'ImageConverter.cer'
+$msix = Join-Path $dir 'Flipix.ContextMenu.msix'
+$cer = Join-Path $dir 'Flipix.cer'
 
 function Test-Trusted {
   if (-not (Test-Path $cer)) { return $false }

@@ -15,7 +15,7 @@ inline constexpr CLSID kClsid = {0x233119CD, 0x5628, 0x4066, {0xAB, 0x18, 0xD5, 
 
 // Executables the menu starts; installed in the same folder as this DLL.
 inline constexpr wchar_t kCliExeName[] = L"imgconv.exe";
-inline constexpr wchar_t kAppExeName[] = L"ImageConverter.exe";
+inline constexpr wchar_t kAppExeName[] = L"Flipix.exe";
 
 void SetModule(HMODULE module);
 HMODULE Module();

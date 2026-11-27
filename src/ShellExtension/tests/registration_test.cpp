@@ -15,7 +15,7 @@ using qic::LegacyRegistrationValues;
 using qic::RegistryValue;
 
 namespace {
-const std::wstring kDll = L"C:\\Program Files\\QIC\\ImageConverter.ShellExtension.dll";
+const std::wstring kDll = L"C:\\Program Files\\QIC\\Flipix.ShellExtension.dll";
 
 bool Contains(const std::vector<RegistryValue>& values, const RegistryValue& wanted) {
     return std::find(values.begin(), values.end(), wanted) != values.end();
@@ -95,7 +95,7 @@ TEST(ManifestFragment_UsesTheDllClsidVerbAndFileName) {
         ids.push_back(clsid);  // <com:Class Id="...">
         return ids;
     }());
-    CHECK_EQ(AttributeValues(xml, "Path"), std::vector<std::string>{"ImageConverter.ShellExtension.dll"});
+    CHECK_EQ(AttributeValues(xml, "Path"), std::vector<std::string>{"Flipix.ShellExtension.dll"});
     CHECK_EQ(AttributeValues(xml, "ThreadingModel"), std::vector<std::string>{"STA"});
 }
 

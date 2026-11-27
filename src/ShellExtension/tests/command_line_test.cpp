@@ -40,8 +40,8 @@ TEST(BuildLaunchPlan_PutsFewFilesOnTheCommandLine) {
 }
 
 TEST(BuildLaunchPlan_AlwaysQuotesTheExecutable) {
-    const auto plan = BuildLaunchPlan(L"C:\\QIC\\ImageConverter.exe", {}, {L"C:\\a.png"}, L"C:\\t.txt");
-    CHECK_EQ(plan.commandLine, std::wstring(L"\"C:\\QIC\\ImageConverter.exe\" C:\\a.png"));
+    const auto plan = BuildLaunchPlan(L"C:\\QIC\\Flipix.exe", {}, {L"C:\\a.png"}, L"C:\\t.txt");
+    CHECK_EQ(plan.commandLine, std::wstring(L"\"C:\\QIC\\Flipix.exe\" C:\\a.png"));
 }
 
 TEST(BuildLaunchPlan_UsesResponseFileWhenTooLong) {

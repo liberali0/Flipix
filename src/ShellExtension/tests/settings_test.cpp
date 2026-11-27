@@ -90,17 +90,20 @@ TEST(PackageFamilyNameFromFullName_DropsVersionArchAndResource) {
 
 TEST(SettingsPathCandidates_UnpackagedUsesLocalAppData) {
     const auto paths = SettingsPathCandidates(L"C:\\Users\\kim\\AppData\\Local",
-                                              L"C:\\Program Files\\QuickImageConverter\\ImageConverter.ShellExtension.dll");
+                                              L"C:\\Program Files\\Flipix\\Flipix.ShellExtension.dll");
     CHECK_EQ(paths, (std::vector<std::wstring>{
+                        L"C:\\Users\\kim\\AppData\\Local\\Flipix\\settings.json",
                         L"C:\\Users\\kim\\AppData\\Local\\QuickImageConverter\\settings.json"}));
 }
 
 TEST(SettingsPathCandidates_PackagedPrefersLocalCache) {
     const auto paths = SettingsPathCandidates(
         L"C:\\Users\\kim\\AppData\\Local\\",
-        L"C:\\Program Files\\windowsapps\\QuickImageConverter_1.0.0.0_x64__8wekyb3d8bbwe\\ImageConverter.ShellExtension.dll");
+        L"C:\\Program Files\\windowsapps\\QuickImageConverter_1.0.0.0_x64__8wekyb3d8bbwe\\Flipix.ShellExtension.dll");
     CHECK_EQ(paths, (std::vector<std::wstring>{
+                        L"C:\\Users\\kim\\AppData\\Local\\Packages\\QuickImageConverter_8wekyb3d8bbwe\\LocalCache\\Local\\Flipix\\settings.json",
                         L"C:\\Users\\kim\\AppData\\Local\\Packages\\QuickImageConverter_8wekyb3d8bbwe\\LocalCache\\Local\\QuickImageConverter\\settings.json",
+                        L"C:\\Users\\kim\\AppData\\Local\\Flipix\\settings.json",
                         L"C:\\Users\\kim\\AppData\\Local\\QuickImageConverter\\settings.json"}));
 }
 

@@ -75,13 +75,13 @@ jobs:
           cmake -S src/ShellExtension -B build/shell -A x64
           cmake --build build/shell --config Release
           ctest --test-dir build/shell -C Release --output-on-failure
-          ./packaging/Test-PeHardening.ps1 -Machine x64 -Path build/shell/Release/ImageConverter.ShellExtension.dll
-          Copy-Item build/shell/Release/ImageConverter.ShellExtension.dll publish/
+          ./packaging/Test-PeHardening.ps1 -Machine x64 -Path build/shell/Release/Flipix.ShellExtension.dll
+          Copy-Item build/shell/Release/Flipix.ShellExtension.dll publish/
           # ARM64 PC의 탐색기용. 여기서는 교차 빌드라 테스트는 shell-extension.yml의 ARM64 작업이 ARM64 PC에서 돌립니다.
           cmake -S src/ShellExtension -B build/shell-arm64 -A ARM64
-          cmake --build build/shell-arm64 --config Release --target ImageConverter.ShellExtension
-          ./packaging/Test-PeHardening.ps1 -Machine arm64 -Path build/shell-arm64/Release/ImageConverter.ShellExtension.dll
-          Copy-Item build/shell-arm64/Release/ImageConverter.ShellExtension.dll publish/ImageConverter.ShellExtension.arm64.dll
+          cmake --build build/shell-arm64 --config Release --target Flipix.ShellExtension
+          ./packaging/Test-PeHardening.ps1 -Machine arm64 -Path build/shell-arm64/Release/Flipix.ShellExtension.dll
+          Copy-Item build/shell-arm64/Release/Flipix.ShellExtension.dll publish/Flipix.ShellExtension.arm64.dll
       - name: Version
         id: v
         shell: pwsh
@@ -125,7 +125,7 @@ jobs:
             # 비밀값이 없으면 실행마다 새 자체 서명 인증서를 만듭니다(업데이트 때마다 인증서 신뢰 등록이 다시 필요).
             $pw = [Guid]::NewGuid().ToString()
             ./packaging/New-DevCertificate.ps1 -Password $pw -OutDir $env:RUNNER_TEMP
-            Move-Item (Join-Path $env:RUNNER_TEMP "ImageConverter.pfx") $pfx -Force
+            Move-Item (Join-Path $env:RUNNER_TEMP "Flipix.pfx") $pfx -Force
           }
           Write-Host "::add-mask::$pw"
           "SIGN_PW=$pw" >> $env:GITHUB_ENV
@@ -141,7 +141,7 @@ jobs:
           VERSION: ${{ steps.v.outputs.version }}
         run: |
           ./packaging/build-msix.ps1 -ContextMenuOnly -Version $env:VERSION -PublishDir publish -PfxPath $env:SIGN_PFX -PfxPassword $env:SIGN_PW
-          Copy-Item packaging/out/ImageConverter.ContextMenu.msix, packaging/out/ImageConverter.cer publish/
+          Copy-Item packaging/out/Flipix.ContextMenu.msix, packaging/out/Flipix.cer publish/
       - name: Build setup wizard (기본 설치 파일)
         shell: pwsh
         env:
@@ -165,7 +165,7 @@ jobs:
         run: |
           mkdir release
           Copy-Item packaging/out/Flipix-Setup-*.exe release/
-          Copy-Item packaging/out/ImageConverter.msix, packaging/out/ImageConverter.cer, packaging/Install.ps1 release/
+          Copy-Item packaging/out/Flipix.msix, packaging/out/Flipix.cer, packaging/Install.ps1 release/
           # 내려받은 파일이 원본 그대로인지 누구나 확인할 수 있게 SHA-256 해시 목록을 함께 올립니다.
           Push-Location release
           Get-ChildItem -File | Sort-Object Name | ForEach-Object {

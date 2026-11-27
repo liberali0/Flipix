@@ -5,7 +5,7 @@
 
 옵션: 우클릭 메뉴 추가(기본 켜짐), 바탕 화면 바로 가기, 명령줄 도구를 PATH에 추가. 제거는 Windows 설정의 앱 목록에서 하며 우클릭 메뉴 등록도 함께 해제됩니다.
 
-**Windows 11 우클릭 메뉴 위치:** 마법사는 설치 폴더를 외부 위치로 하는 작은 메뉴 패키지(`ImageConverter.ContextMenu.msix`, sparse package)를 등록해서 Win11 첫 화면에 메뉴를 띄웁니다. 그 패키지의 서명 인증서를 이 PC가 신뢰해야 해서 설치 중 관리자 확인(UAC)이 한 번 뜹니다. 거절하거나 Windows 10이면 기존 방식(regsvr32)으로 등록되고, Win11에선 "더 많은 옵션 표시" 안에 나타납니다. 두 방식 중 하나만 등록해서 메뉴가 두 번 보이지 않게 합니다. 자체 서명 인증서는 릴리스마다 새로 만들어지므로 업데이트할 때마다 관리자 확인이 다시 뜹니다(시크릿 `SIGN_PFX_BASE64`로 고정 인증서를 쓰면 처음 한 번만). 마법사 설치와 전체 MSIX를 함께 설치하면 메뉴가 두 번 보입니다.
+**Windows 11 우클릭 메뉴 위치:** 마법사는 설치 폴더를 외부 위치로 하는 작은 메뉴 패키지(`Flipix.ContextMenu.msix`, sparse package)를 등록해서 Win11 첫 화면에 메뉴를 띄웁니다. 그 패키지의 서명 인증서를 이 PC가 신뢰해야 해서 설치 중 관리자 확인(UAC)이 한 번 뜹니다. 거절하거나 Windows 10이면 기존 방식(regsvr32)으로 등록되고, Win11에선 "더 많은 옵션 표시" 안에 나타납니다. 두 방식 중 하나만 등록해서 메뉴가 두 번 보이지 않게 합니다. 자체 서명 인증서는 릴리스마다 새로 만들어지므로 업데이트할 때마다 관리자 확인이 다시 뜹니다(시크릿 `SIGN_PFX_BASE64`로 고정 인증서를 쓰면 처음 한 번만). 마법사 설치와 전체 MSIX를 함께 설치하면 메뉴가 두 번 보입니다.
 
 - `ContextMenuManifest.template.xml` – 메뉴 패키지 매니페스트. `build-msix.ps1 -ContextMenuOnly`로 빌드.
 - `installer/ContextMenu.ps1` – 설치 폴더에 함께 설치되는 등록 도우미(Trust / IsTrusted / Register / Unregister).
@@ -35,11 +35,11 @@ Publisher 값은 서명 인증서의 Subject와 **정확히 일치**해야 합�
 dotnet publish src/ImageConverter.App -c Release -r win-x64 --self-contained -o publish
 dotnet publish src/ImageConverter.Cli -c Release -r win-x64 --self-contained -o publish
 cmake -S src/ShellExtension -B build/shell -A x64; cmake --build build/shell --config Release
-Copy-Item build/shell/Release/ImageConverter.ShellExtension.dll publish/
+Copy-Item build/shell/Release/Flipix.ShellExtension.dll publish/
 # 설치 마법사에는 ARM64 PC용 메뉴 DLL도 들어갑니다(ARM64 PC에서는 이 DLL을 원래 이름으로 설치).
-cmake -S src/ShellExtension -B build/shell-arm64 -A ARM64; cmake --build build/shell-arm64 --config Release --target ImageConverter.ShellExtension
-Copy-Item build/shell-arm64/Release/ImageConverter.ShellExtension.dll publish/ImageConverter.ShellExtension.arm64.dll
+cmake -S src/ShellExtension -B build/shell-arm64 -A ARM64; cmake --build build/shell-arm64 --config Release --target Flipix.ShellExtension
+Copy-Item build/shell-arm64/Release/Flipix.ShellExtension.dll publish/Flipix.ShellExtension.arm64.dll
 ./packaging/New-DevCertificate.ps1 -Password pw   # 처음 한 번
 ./packaging/build-msix.ps1 -Version 1.0.0.0 -PublishDir publish -PfxPath packaging/out/ImageConverter.pfx -PfxPassword pw
 ```
-메뉴 DLL이 `ImageConverter.exe`/`imgconv.exe`를 패키지 폴더 경로로 직접 실행하므로 패키지 신원 없이 실행됩니다(변환에는 문제 없음).
+메뉴 DLL이 `Flipix.exe`/`imgconv.exe`를 패키지 폴더 경로로 직접 실행하므로 패키지 신원 없이 실행됩니다(변환에는 문제 없음).

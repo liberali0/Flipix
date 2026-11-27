@@ -7,15 +7,15 @@
 #   3) 관리자 권한 명령에는 인증서 내용이 그대로 들어가므로, 확인 뒤에 파일을 바꿔치기해도 소용없습니다.
 $ErrorActionPreference = 'Stop'
 $dir = $PSScriptRoot
-$cer = Join-Path $dir "ImageConverter.cer"
-$msix = Join-Path $dir "ImageConverter.msix"
+$cer = Join-Path $dir "Flipix.cer"
+$msix = Join-Path $dir "Flipix.msix"
 $sums = Join-Path $dir "SHA256SUMS.txt"
 
 if (Test-Path $sums) {
   foreach ($line in Get-Content $sums) {
     if ($line -notmatch '^([0-9a-fA-F]{64})\s+\*?(.+)$') { continue }
     $name = $Matches[2].Trim()
-    if ($name -notin 'ImageConverter.msix', 'ImageConverter.cer') { continue }
+    if ($name -notin 'Flipix.msix', 'Flipix.cer') { continue }
     $actual = (Get-FileHash -Algorithm SHA256 (Join-Path $dir $name)).Hash
     if ($actual -ne $Matches[1].ToUpperInvariant()) { throw "$name 파일이 릴리스 원본과 다릅니다(해시 불일치). 설치를 중단합니다." }
   }
@@ -25,7 +25,7 @@ if (Test-Path $cer) {
   $cert = New-Object Security.Cryptography.X509Certificates.X509Certificate2(,[IO.File]::ReadAllBytes($cer))
   $sig = Get-AuthenticodeSignature -FilePath $msix
   if (-not $sig.SignerCertificate -or $sig.SignerCertificate.Thumbprint -ne $cert.Thumbprint) {
-    throw "ImageConverter.msix가 함께 받은 인증서로 서명되지 않았습니다. 설치를 중단합니다."
+    throw "Flipix.msix가 함께 받은 인증서로 서명되지 않았습니다. 설치를 중단합니다."
   }
   $already = Get-ChildItem Cert:\LocalMachine\TrustedPeople | Where-Object Thumbprint -eq $cert.Thumbprint
   if (-not $already) {

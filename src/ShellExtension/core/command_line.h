@@ -33,7 +33,7 @@ LaunchPlan BuildLaunchPlan(std::wstring_view exePath,
 std::wstring FormatFailureMessage(unsigned long exitCode, std::string_view stderrUtf8, std::size_t maxLines = 12,
                                   bool english = false);
 
-// Temporary files the menu writes to %TEMP%\QuickImageConverter: "<prefix><guid>.txt".
+// Temporary files the menu writes to %TEMP%\Flipix: "<prefix><guid>.txt".
 inline constexpr std::wstring_view kSelectionFilePrefix = L"selection-";
 inline constexpr std::wstring_view kErrorsFilePrefix = L"errors-";
 
@@ -41,7 +41,7 @@ inline constexpr std::wstring_view kErrorsFilePrefix = L"errors-";
 // app was handed are never deleted right away, because the app may still be reading them.
 bool IsStaleTempFile(std::wstring_view fileName, unsigned long long ageSeconds);
 
-// %LOCALAPPDATA%\QuickImageConverter\<this file> is touched by the app each time it looks for a
+// %LOCALAPPDATA%\Flipix\<this file> is touched by the app each time it looks for a
 // new version; the menu asks the app to look again once it is a day old (or missing).
 inline constexpr std::wstring_view kUpdateStampFileName = L"update-check.stamp";
 inline constexpr unsigned long long kUpdateCheckIntervalSeconds = 24ULL * 60 * 60;

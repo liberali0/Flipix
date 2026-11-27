@@ -7,7 +7,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "Version must be MAJOR.MINOR.PATCH: $Version" }
-foreach ($f in "ImageConverter.exe","imgconv.exe","ImageConverter.ShellExtension.dll","ImageConverter.ShellExtension.arm64.dll") {
+foreach ($f in "Flipix.exe","imgconv.exe","Flipix.ShellExtension.dll","Flipix.ShellExtension.arm64.dll") {
   if (-not (Test-Path (Join-Path $PublishDir $f))) { throw "Missing in PublishDir: $f" }
 }
 $iscc = @("${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe","$env:ProgramFiles\Inno Setup 6\ISCC.exe") |
@@ -19,7 +19,7 @@ $isccArgs = @("/DAppVersion=$Version", "/DSourceDir=$((Resolve-Path $PublishDir)
 # Win11 우클릭 메뉴 패키지의 인증서를 신뢰 등록하는 관리자 명령을 미리 만들어 설치 파일 안에 넣습니다.
 # 인증서 내용이 명령 안에 들어가므로, 관리자 권한으로 실행될 때 사용자가 쓸 수 있는 설치 폴더의 파일을
 # 전혀 읽지 않습니다(바꿔치기로 다른 인증서를 신뢰시키거나 다른 스크립트를 관리자 권한으로 돌릴 수 없음).
-$cerPath = Join-Path $PublishDir "ImageConverter.cer"
+$cerPath = Join-Path $PublishDir "Flipix.cer"
 if (Test-Path $cerPath) {
   $cer = New-Object Security.Cryptography.X509Certificates.X509Certificate2(,[IO.File]::ReadAllBytes((Resolve-Path $cerPath).Path))
   $b64 = [Convert]::ToBase64String($cer.RawData)

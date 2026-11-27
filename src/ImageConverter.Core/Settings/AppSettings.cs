@@ -80,15 +80,36 @@ public sealed class SettingsStore
 
     public string Path { get; }
 
-    /// <summary>%LOCALAPPDATA%\QuickImageConverter\settings.json</summary>
+    /// <summary>%LOCALAPPDATA%\Flipix\settings.json</summary>
     public static string DefaultPath => System.IO.Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Flipix", "settings.json");
+
+    /// <summary>v0.1.5 이전 위치(%LOCALAPPDATA%\QuickImageConverter\settings.json).</summary>
+    public static string LegacyPath => System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "QuickImageConverter", "settings.json");
+
+    /// <summary>
+    /// 새 위치에 설정이 없고 예전 위치에 있으면 복사해 온다. 옮기지 않고 복사하는 까닭: 업데이트 직후에는
+    /// 탐색기가 아직 예전 우클릭 메뉴를 불러 둔 채라 예전 파일을 읽는다(다음 로그인부터 새 메뉴).
+    /// </summary>
+    public static void MigrateLegacy(string legacyPath, string newPath)
+    {
+        try
+        {
+            if (File.Exists(newPath) || !File.Exists(legacyPath)) return;
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(newPath)!);
+            File.Copy(legacyPath, newPath);
+        }
+        catch { /* 복사하지 못하면 기본값으로 시작 */ }
+    }
 
     public AppSettings Load()
     {
         try
         {
+            if (Path == DefaultPath) MigrateLegacy(LegacyPath, Path);
             if (!File.Exists(Path)) return new AppSettings();
             var s = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(Path), Json) ?? new AppSettings();
             s.QuickMenu ??= new QuickMenuSettings();

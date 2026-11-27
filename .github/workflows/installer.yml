@@ -22,17 +22,17 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory dummy | Out-Null
-          foreach ($f in 'ImageConverter.exe','imgconv.exe') { Set-Content (Join-Path dummy $f) 'x' }
+          foreach ($f in 'Flipix.exe','imgconv.exe') { Set-Content (Join-Path dummy $f) 'x' }
           # 내용으로 구분해서, PC에 맞는 우클릭 메뉴 DLL이 들어갔는지 아래에서 확인합니다.
-          Set-Content dummy/ImageConverter.ShellExtension.dll 'x64'
-          Set-Content dummy/ImageConverter.ShellExtension.arm64.dll 'arm64'
+          Set-Content dummy/Flipix.ShellExtension.dll 'x64'
+          Set-Content dummy/Flipix.ShellExtension.arm64.dll 'arm64'
       - name: Context menu package (sparse MSIX)
         shell: pwsh
         run: |
           $pw = [Guid]::NewGuid().ToString()
           ./packaging/New-DevCertificate.ps1 -Password $pw -OutDir $env:RUNNER_TEMP
-          ./packaging/build-msix.ps1 -ContextMenuOnly -Version 0.0.1.0 -PublishDir dummy -PfxPath (Join-Path $env:RUNNER_TEMP ImageConverter.pfx) -PfxPassword $pw
-          Copy-Item packaging/out/ImageConverter.ContextMenu.msix, packaging/out/ImageConverter.cer dummy/
+          ./packaging/build-msix.ps1 -ContextMenuOnly -Version 0.0.1.0 -PublishDir dummy -PfxPath (Join-Path $env:RUNNER_TEMP Flipix.pfx) -PfxPassword $pw
+          Copy-Item packaging/out/Flipix.ContextMenu.msix, packaging/out/Flipix.cer dummy/
       - name: Register and remove the package like the installer does
         # 러너 OS가 외부 위치 패키지를 지원하지 않으면 실패할 수 있어 결과만 남깁니다.
         continue-on-error: true
@@ -61,9 +61,9 @@ jobs:
           }
           $first = Join-Path $env:RUNNER_TEMP 'FlipixA'
           Run $setup "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /TASKS=`"`" /DIR=`"$first`" /LOG=`"$env:RUNNER_TEMP\1-install.log`""
-          if (-not (Test-Path "$first\ImageConverter.exe")) { throw "not installed" }
-          if ((Get-Content "$first\ImageConverter.ShellExtension.dll") -ne 'x64') { throw "wrong menu DLL on x64" }
-          if (Test-Path "$first\ImageConverter.ShellExtension.arm64.dll") { throw "arm64 DLL copied on x64" }
+          if (-not (Test-Path "$first\Flipix.exe")) { throw "not installed" }
+          if ((Get-Content "$first\Flipix.ShellExtension.dll") -ne 'x64') { throw "wrong menu DLL on x64" }
+          if (Test-Path "$first\Flipix.ShellExtension.arm64.dll") { throw "arm64 DLL copied on x64" }
           $k = Get-ItemProperty $key
           if ($k.NoModify -ne 0 -or $k.ModifyPath -notlike "*Flipix-Setup.exe*/MODIFY") { throw "Modify button not enabled: $($k.ModifyPath) $($k.NoModify)" }
           if (-not (Test-Path $copy)) { throw "installer copy missing" }
@@ -75,7 +75,7 @@ jobs:
           # 수정 > 설치 위치 변경
           $second = Join-Path $env:RUNNER_TEMP 'FlipixB'
           Run $copy "/MODIFY /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$second`" /LOG=`"$env:RUNNER_TEMP\3-move.log`""
-          if (-not (Test-Path "$second\ImageConverter.exe")) { throw "not moved" }
+          if (-not (Test-Path "$second\Flipix.exe")) { throw "not moved" }
           if (Test-Path $first) { throw "old folder left behind: $(Get-ChildItem $first -Recurse | Out-String)" }
           if ((Get-ItemProperty $key).'Inno Setup: App Path' -ne $second) { throw "uninstall info still points to the old folder" }
 
@@ -84,7 +84,32 @@ jobs:
           for ($i = 0; $i -lt 30 -and (Test-Path $key); $i++) { Start-Sleep -Seconds 1 } # 제거 도우미가 임시 폴더에서 이어서 돎
           if (Test-Path $key) { throw "uninstall info left" }
           if (Test-Path $copy) { throw "installer copy left" }
-          Write-Host "install/update/move/uninstall OK"
+          for ($i = 0; $i -lt 10 -and (Test-Path $second); $i++) { Start-Sleep -Seconds 1 }
+          if (Test-Path $second) { throw "install folder left after uninstall: $(Get-ChildItem $second -Recurse | Out-String)" }
+
+          # 예전 기본 폴더 이름(QuickImageConverter)에서 업데이트하면 옆의 Flipix 폴더로 옮김
+          $old = Join-Path $env:RUNNER_TEMP 'QuickImageConverter'
+          $new = Join-Path $env:RUNNER_TEMP 'Flipix'
+          Run $setup "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /TASKS=`"`" /DIR=`"$old`""
+          Set-Content "$old\ImageConverter.exe" 'old'
+          Run $setup "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG=`"$env:RUNNER_TEMP\4-migrate.log`""
+          if ((Get-ItemProperty $key).'Inno Setup: App Path' -ne $new) { throw "not migrated to the Flipix folder" }
+          if (-not (Test-Path "$new\Flipix.exe")) { throw "not installed in the Flipix folder" }
+          $runOnce = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\RunOnce'
+          if (-not (Get-ItemProperty $runOnce).FlipixRemoveOldFolder) { throw "old folder not scheduled for removal" }
+          Remove-ItemProperty $runOnce FlipixRemoveOldFolder
+          Remove-Item $old -Recurse -Force
+
+          # 제거하면 설정 폴더까지 남김없이 지움
+          New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\Flipix" | Out-Null
+          Set-Content "$env:LOCALAPPDATA\Flipix\settings.json" '{}'
+          Set-Content "$new\Flipix.ShellExtension.dll.20260101000000.old" 'x'
+          Run "$new\unins000.exe" "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+          for ($i = 0; $i -lt 30 -and (Test-Path $key); $i++) { Start-Sleep -Seconds 1 }
+          for ($i = 0; $i -lt 10 -and (Test-Path $new); $i++) { Start-Sleep -Seconds 1 }
+          if (Test-Path $new) { throw "install folder left after uninstall: $(Get-ChildItem $new -Recurse | Out-String)" }
+          if (Test-Path "$env:LOCALAPPDATA\Flipix") { throw "settings folder left after uninstall" }
+          Write-Host "install/update/move/migrate/uninstall OK"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: setup-dummy
@@ -109,8 +134,8 @@ jobs:
           $dir = Join-Path $env:RUNNER_TEMP 'FlipixArm'
           $p = Start-Process (Resolve-Path Flipix-Setup-0.0.1.exe).Path -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /TASKS=`"`" /DIR=`"$dir`" /LOG=`"$env:RUNNER_TEMP\arm-install.log`"" -Wait -PassThru
           if ($p.ExitCode) { Get-Content "$env:RUNNER_TEMP\arm-install.log" -Tail 40; throw "install exit $($p.ExitCode)" }
-          if ((Get-Content "$dir\ImageConverter.ShellExtension.dll") -ne 'arm64') { throw "wrong menu DLL on ARM64" }
-          if (Test-Path "$dir\ImageConverter.ShellExtension.arm64.dll") { throw "arm64 DLL left under its build name" }
+          if ((Get-Content "$dir\Flipix.ShellExtension.dll") -ne 'arm64') { throw "wrong menu DLL on ARM64" }
+          if (Test-Path "$dir\Flipix.ShellExtension.arm64.dll") { throw "arm64 DLL left under its build name" }
           $p = Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait -PassThru
           if ($p.ExitCode) { throw "uninstall exit $($p.ExitCode)" }
           Write-Host "ARM64 install OK"
