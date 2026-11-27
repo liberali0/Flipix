@@ -41,7 +41,8 @@ std::wstring JoinPath(std::wstring_view folder, std::wstring_view relative) {
 bool operator==(const QuickMenuSettings& left, const QuickMenuSettings& right) {
     return left.formats == right.formats && left.showDetails == right.showDetails &&
            left.deleteOriginal == right.deleteOriginal && left.moveOriginal == right.moveOriginal &&
-           left.moveOriginalTo == right.moveOriginalTo;
+           left.moveOriginalTo == right.moveOriginalTo && left.notifySuccess == right.notifySuccess &&
+           left.checkForUpdates == right.checkForUpdates;
 }
 
 bool MovesOriginals(const QuickMenuSettings& settings) {
@@ -54,6 +55,10 @@ QuickMenuSettings ParseQuickMenuSettings(std::string_view utf8Json) {
     QuickMenuSettings settings = DefaultQuickMenuSettings();
     const std::optional<JsonValue> document = ParseJson(utf8Json);
     if (!document) return settings;
+    if (const JsonValue* updates = document->Find("checkForUpdates");
+        updates != nullptr && updates->type == JsonValue::Type::Bool) {
+        settings.checkForUpdates = updates->boolean;
+    }
     const JsonValue* section = document->Find("quickMenu");
     if (section == nullptr || section->type != JsonValue::Type::Object) return settings;
 
@@ -89,6 +94,11 @@ QuickMenuSettings ParseQuickMenuSettings(std::string_view utf8Json) {
         folder != nullptr && folder->type == JsonValue::Type::String && IsFullWindowsPath(folder->string) &&
         folder->string.find('\0') == std::string::npos) {
         settings.moveOriginalTo = folder->string;
+    }
+    // "failures" (default) or "always"; anything else keeps the quiet default.
+    if (const JsonValue* notify = section->Find("notify");
+        notify != nullptr && notify->type == JsonValue::Type::String) {
+        settings.notifySuccess = LowerAscii(notify->string) == "always";
     }
     return settings;
 }

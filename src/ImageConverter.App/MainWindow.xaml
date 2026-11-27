@@ -81,10 +81,9 @@
                             ToolTip="더보기" Click="OnMoreClick">
                         <Button.ContextMenu>
                             <ContextMenu>
-                                <MenuItem Header="업데이트 확인" Command="{Binding CheckUpdatesCommand}" />
-                                <MenuItem Header="Workshop을 열 때 새 버전 확인" IsCheckable="True"
-                                          IsChecked="{Binding CheckForUpdatesOnStart}" />
+                                <MenuItem Header="상세 설정…" Command="{Binding OpenAdvancedSettingsCommand}" />
                                 <Separator />
+                                <MenuItem Header="업데이트 확인" Command="{Binding CheckUpdatesCommand}" />
                                 <MenuItem Header="바탕 화면에 바로 가기 만들기" Command="{Binding CreateShortcutCommand}" />
                                 <Separator />
                                 <MenuItem Header="{Binding VersionText}" IsEnabled="False" />

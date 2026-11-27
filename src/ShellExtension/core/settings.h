@@ -16,6 +16,8 @@ struct QuickMenuSettings {
     bool deleteOriginal = false;       // after a successful quick convert, move the source to the Recycle Bin
     bool moveOriginal = false;         // ...or move it into moveOriginalTo (wins over deleteOriginal)
     std::string moveOriginalTo{};      // UTF-8 full folder path; empty when unset or not a full path
+    bool notifySuccess = false;        // quickMenu.notify == "always": also tell the user when everything worked
+    bool checkForUpdates = true;       // top-level checkForUpdates: look for a new version about once a day
 };
 
 // True when the settings ask to move converted originals into a usable folder.

@@ -3,6 +3,7 @@ using System.Windows;
 using ImageConverter.App.Services;
 using ImageConverter.App.ViewModels;
 using ImageConverter.Core.Settings;
+using ImageConverter.Core.Updates;
 
 namespace ImageConverter.App;
 
@@ -20,7 +21,17 @@ public partial class App : Application
         };
 
         var store = new SettingsStore();
-        ThemeService.Apply(store.Load().Theme);
+        var settings = store.Load();
+        ThemeService.Apply(settings.Theme);
+
+        // 우클릭 변환이 끝난 뒤 셸 확장이 부르는 모드: 창 없이 알림만 띄우고 스스로 끝난다.
+        if (e.Args.Contains("--background"))
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            _ = RunBackgroundAsync(e.Args, settings);
+            return;
+        }
+
         var engine = EngineFactory.Create();
         var vm = new MainViewModel(engine, store);
 
@@ -39,6 +50,67 @@ public partial class App : Application
         window.Show();
         if (paths.Count > 0) _ = vm.AddPathsAsync(paths);
         _ = vm.CheckOnStartAsync(); // 새 버전이 있으면 상단 막대에 업데이트 단추가 나타난다
+    }
+
+    private async Task RunBackgroundAsync(string[] args, AppSettings settings)
+    {
+        try
+        {
+            var notices = new List<Task>();
+            var at = Array.IndexOf(args, "--converted");
+            if (at >= 0 && at + 1 < args.Length && int.TryParse(args[at + 1], out var converted) && converted > 0)
+            {
+                var done = new NoticeWindow("빠른 변환 완료", $"{converted:N0}개 파일을 모두 변환했어요.");
+                done.CloseAfter(TimeSpan.FromSeconds(5));
+                notices.Add(done.ShowNotice());
+            }
+
+            if (args.Contains("--check-update") && settings.CheckForUpdates)
+            {
+                UpdateInfo? info = null;
+                try { info = await UpdateService.CheckAsync(); } catch { /* 인터넷이 없으면 조용히 넘어간다 */ }
+                if (info != null) notices.Add(ShowUpdateNotice(info));
+            }
+
+            await Task.WhenAll(notices);
+        }
+        catch (Exception ex)
+        {
+            try { LogError(ex); } catch { }
+        }
+        Shutdown();
+    }
+
+    private static Task ShowUpdateNotice(UpdateInfo info)
+    {
+        var notice = new NoticeWindow($"Flipix v{info.Version}이(가) 나왔어요",
+            "지금 업데이트할까요? 설치 위치와 설정은 그대로예요.");
+        notice.AddButton("업데이트", primary: true, async () =>
+        {
+            notice.SetButtonsEnabled(false);
+            try
+            {
+                var progress = new Progress<double>(p => notice.Message = $"내려받는 중… {p:0}%");
+                var setup = await UpdateService.DownloadAsync(info, progress);
+                notice.Message = "업데이트를 시작해요.";
+                UpdateService.LaunchInstaller(setup);
+                notice.Close();
+            }
+            catch (Exception ex)
+            {
+                notice.Message = "업데이트하지 못했어요: " + ex.Message;
+                notice.SetButtonsEnabled(true);
+            }
+        });
+        notice.AddButton("나중에", primary: false, notice.Close);
+        return notice.ShowNotice();
+    }
+
+    private static void LogError(Exception ex)
+    {
+        var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Flipix");
+        Directory.CreateDirectory(dir);
+        File.AppendAllText(Path.Combine(dir, "crash.log"), $"[{DateTime.Now:O}] {ex}{Environment.NewLine}{Environment.NewLine}");
     }
 
     private static void ReportCrash(Exception ex)

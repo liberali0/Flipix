@@ -14,6 +14,11 @@ struct LaunchRequest {
     std::vector<std::wstring> files;
     bool hidden = false;          // console tool: no window, stderr captured, exit watched
     bool reportFailures = false;  // hidden only: message box when the process exits non-zero
+    // Hidden only: once the CLI exits, start this app in background mode (see qic::FollowUpArguments)
+    // to say that every file converted and/or to look for a new version. Empty: never.
+    std::wstring followUpExe;
+    bool notifySuccess = false;
+    bool checkForUpdates = false;  // already decided to be due
 };
 
 // Starts the process and returns immediately. For hidden tools a background thread waits for

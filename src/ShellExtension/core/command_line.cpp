@@ -97,4 +97,21 @@ bool IsStaleTempFile(std::wstring_view fileName, unsigned long long ageSeconds) 
     return ours && ageSeconds >= kOneDay;
 }
 
+bool IsUpdateCheckDue(bool stampExists, unsigned long long stampAgeSeconds) {
+    return !stampExists || stampAgeSeconds >= kUpdateCheckIntervalSeconds;
+}
+
+std::vector<std::wstring> FollowUpArguments(bool notifySuccess, std::size_t convertedCount, bool checkUpdate) {
+    std::vector<std::wstring> args;
+    const bool notify = notifySuccess && convertedCount > 0;
+    if (!notify && !checkUpdate) return args;
+    args.push_back(L"--background");
+    if (notify) {
+        args.push_back(L"--converted");
+        args.push_back(std::to_wstring(convertedCount));
+    }
+    if (checkUpdate) args.push_back(L"--check-update");
+    return args;
+}
+
 }  // namespace qic

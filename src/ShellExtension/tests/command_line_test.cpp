@@ -101,3 +101,19 @@ TEST(IsStaleTempFile_OnlyOldFilesTheMenuCreated) {
     CHECK(!IsStaleTempFile(L"notes.txt", 10 * 24 * 60 * 60));
     CHECK(!IsStaleTempFile(L"selection-1234ABCD.png", 10 * 24 * 60 * 60));
 }
+
+TEST(IsUpdateCheckDue_OncePerDay) {
+    CHECK(qic::IsUpdateCheckDue(false, 0));
+    CHECK(!qic::IsUpdateCheckDue(true, 60));
+    CHECK(!qic::IsUpdateCheckDue(true, 24 * 60 * 60 - 1));
+    CHECK(qic::IsUpdateCheckDue(true, 24 * 60 * 60));
+}
+
+TEST(FollowUpArguments_OnlyWhenThereIsSomethingToDo) {
+    using Args = std::vector<std::wstring>;
+    CHECK(qic::FollowUpArguments(false, 3, false).empty());
+    CHECK(qic::FollowUpArguments(true, 0, false).empty());
+    CHECK(qic::FollowUpArguments(true, 3, false) == (Args{L"--background", L"--converted", L"3"}));
+    CHECK(qic::FollowUpArguments(false, 3, true) == (Args{L"--background", L"--check-update"}));
+    CHECK(qic::FollowUpArguments(true, 2, true) == (Args{L"--background", L"--converted", L"2", L"--check-update"}));
+}

@@ -40,4 +40,14 @@ inline constexpr std::wstring_view kErrorsFilePrefix = L"errors-";
 // app was handed are never deleted right away, because the app may still be reading them.
 bool IsStaleTempFile(std::wstring_view fileName, unsigned long long ageSeconds);
 
+// %LOCALAPPDATA%\QuickImageConverter\<this file> is touched by the app each time it looks for a
+// new version; the menu asks the app to look again once it is a day old (or missing).
+inline constexpr std::wstring_view kUpdateStampFileName = L"update-check.stamp";
+inline constexpr unsigned long long kUpdateCheckIntervalSeconds = 24ULL * 60 * 60;
+bool IsUpdateCheckDue(bool stampExists, unsigned long long stampAgeSeconds);
+
+// Arguments for the app's background mode after a quick convert finished:
+// `--background [--converted <n>] [--check-update]`, or nothing when there is nothing to do.
+std::vector<std::wstring> FollowUpArguments(bool notifySuccess, std::size_t convertedCount, bool checkUpdate);
+
 }  // namespace qic

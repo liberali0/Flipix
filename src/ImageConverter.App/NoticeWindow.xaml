@@ -1,0 +1,31 @@
+<Window x:Class="ImageConverter.App.NoticeWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Flipix" Width="360" SizeToContent="Height" WindowStyle="None" ResizeMode="NoResize"
+        AllowsTransparency="True" Background="Transparent" Topmost="True" ShowInTaskbar="False"
+        ShowActivated="False" Foreground="{DynamicResource Flx.Fg}"
+        FontFamily="Segoe UI Variable Text, Segoe UI, Malgun Gothic" FontSize="13">
+    <!-- 화면 오른쪽 아래에 잠깐 뜨는 작은 알림(우클릭 변환 완료, 새 버전) -->
+    <Border Margin="8" CornerRadius="10" Background="{DynamicResource Flx.Card}" BorderBrush="{DynamicResource Flx.Line}"
+            BorderThickness="1" Padding="14,12,10,12">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="14" ShadowDepth="2" Opacity="0.25" />
+        </Border.Effect>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0" Source="pack://application:,,,/Assets/flipix.ico" Width="28" Height="28"
+                   VerticalAlignment="Top" Margin="0,2,12,0" RenderOptions.BitmapScalingMode="HighQuality" />
+            <StackPanel Grid.Column="1">
+                <TextBlock x:Name="TitleText" FontWeight="SemiBold" FontSize="14" TextWrapping="Wrap" />
+                <TextBlock x:Name="MessageText" Foreground="{DynamicResource Flx.Mute}" TextWrapping="Wrap" Margin="0,3,0,0" />
+                <StackPanel x:Name="Buttons" Orientation="Horizontal" Margin="0,10,0,0" Visibility="Collapsed" />
+            </StackPanel>
+            <Button Grid.Column="2" Style="{StaticResource Flx.GhostButton}" Content="✕" Padding="8,2" FontSize="11"
+                    VerticalAlignment="Top" Click="OnClose" ToolTip="닫기" />
+        </Grid>
+    </Border>
+</Window>

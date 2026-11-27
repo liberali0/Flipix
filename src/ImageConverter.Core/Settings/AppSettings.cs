@@ -15,7 +15,12 @@ public sealed class QuickMenuSettings
     public bool MoveOriginal { get; set; }
     /// <summary>원본을 옮길 폴더(전체 경로). 옮기기를 꺼도 다음에 쓰도록 기억한다.</summary>
     public string? MoveOriginalTo { get; set; }
+    /// <summary>우클릭 변환이 끝났을 때 알림. Failures(기본)는 실패한 파일이 있을 때만, Always는 모두 성공해도 알린다.</summary>
+    public QuickNotify Notify { get; set; } = QuickNotify.Failures;
 }
+
+/// <summary>우클릭 빠른 변환 결과 알림. 셸 확장이 quickMenu.notify("failures"|"always")로 읽는다.</summary>
+public enum QuickNotify { Failures, Always }
 
 /// <summary>Flipix Workshop 화면 테마. System은 Windows 앱 모드(라이트/다크)를 따른다.</summary>
 public enum ThemePreference { System, Light, Dark }
@@ -40,7 +45,7 @@ public sealed class AppSettings
     public OriginalFileAction OriginalAction { get; set; } = OriginalFileAction.Keep;
     /// <summary>Flipix Workshop: 원본을 옮길 폴더(전체 경로).</summary>
     public string? OriginalMoveFolder { get; set; }
-    /// <summary>Flipix Workshop을 열 때 새 버전이 있는지 확인한다. 기본은 켬.</summary>
+    /// <summary>새 버전 알림. Workshop을 열 때와, 우클릭 변환 뒤 하루 한 번(셸 확장이 읽음) 확인한다. 기본은 켬.</summary>
     public bool CheckForUpdates { get; set; } = true;
 
     public int EffectiveParallelism =>

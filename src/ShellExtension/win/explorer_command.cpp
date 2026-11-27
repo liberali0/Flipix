@@ -137,6 +137,9 @@ public:
                     request.files = FilesToConvert(item_.formatId, paths);
                     request.hidden = true;
                     request.reportFailures = true;
+                    request.followUpExe = PathInModuleDirectory(kAppExeName);
+                    request.notifySuccess = settings_->notifySuccess;
+                    request.checkForUpdates = settings_->checkForUpdates && UpdateCheckDue();
                     break;
                 case MenuItemKind::Details:
                     request.exePath = PathInModuleDirectory(kAppExeName);
@@ -221,6 +224,11 @@ class RootCommand final : public CommandBase {
 public:
     IFACEMETHODIMP GetTitle(IShellItemArray*, PWSTR* title) override {
         return Guarded([&] { return DuplicateString(RootTitle(), title); });
+    }
+
+    // Flipix icon next to the menu entry (the app's first icon resource).
+    IFACEMETHODIMP GetIcon(IShellItemArray*, PWSTR* icon) override {
+        return Guarded([&] { return DuplicateString(PathInModuleDirectory(kAppExeName) + L",0", icon); });
     }
 
     IFACEMETHODIMP GetCanonicalName(GUID* name) override {

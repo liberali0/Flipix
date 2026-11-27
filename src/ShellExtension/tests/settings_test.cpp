@@ -147,3 +147,19 @@ TEST(ParseQuickMenuSettings_MovesNothingWithoutAFullFolderPath) {
     CHECK(!MovesOriginals(ParseQuickMenuSettings(R"({"quickMenu":{"moveOriginal":false,"moveOriginalTo":"D:\\keep"}})")));
     CHECK(MovesOriginals(ParseQuickMenuSettings(R"({"quickMenu":{"moveOriginal":true,"moveOriginalTo":"\\\\nas\\photos"}})")));
 }
+
+TEST(ParseQuickMenuSettings_ReadsNotifyAndUpdateChecks) {
+    const QuickMenuSettings defaults = DefaultQuickMenuSettings();
+    CHECK(!defaults.notifySuccess);
+    CHECK(defaults.checkForUpdates);
+
+    const QuickMenuSettings always =
+        ParseQuickMenuSettings(R"({"checkForUpdates":false,"quickMenu":{"notify":"always"}})");
+    CHECK(always.notifySuccess);
+    CHECK(!always.checkForUpdates);
+
+    CHECK(!ParseQuickMenuSettings(R"({"quickMenu":{"notify":"failures"}})").notifySuccess);
+    CHECK(!ParseQuickMenuSettings(R"({"quickMenu":{"notify":true}})").notifySuccess);
+    CHECK(ParseQuickMenuSettings(R"({"quickMenu":{"notify":"always"}})").checkForUpdates);
+    CHECK(!ParseQuickMenuSettings(R"({"checkForUpdates":false})").checkForUpdates);
+}
