@@ -207,7 +207,14 @@ jobs:
             } else {
               $notes = "**첫 릴리스**"
             }
-            # 태그가 아직 없으면(VERSION 방식) 이 빌드의 커밋에 태그를 만듭니다. 자동 변경 목록은 위 줄 뒤에 붙습니다.
-            gh release create $env:TAG (Get-ChildItem release).FullName --title $env:TAG --notes $notes --generate-notes --target $env:GITHUB_SHA
+            # 태그가 아직 없으면(VERSION 방식) 이 빌드의 커밋에 태그를 만듭니다.
+            # release-notes/vX.Y.Z.md가 있으면 그 내용을 위 줄 뒤에 붙이고, 없으면 자동 변경 목록을 붙입니다.
+            $notesFile = "release-notes/$env:TAG.md"
+            if (Test-Path $notesFile) {
+              $notes = $notes + "`n`n" + (Get-Content $notesFile -Raw -Encoding utf8)
+              gh release create $env:TAG (Get-ChildItem release).FullName --title $env:TAG --notes $notes --target $env:GITHUB_SHA
+            } else {
+              gh release create $env:TAG (Get-ChildItem release).FullName --title $env:TAG --notes $notes --generate-notes --target $env:GITHUB_SHA
+            }
           }
           if ($LASTEXITCODE) { throw "release upload failed" }
