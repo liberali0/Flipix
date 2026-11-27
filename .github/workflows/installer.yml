@@ -44,3 +44,43 @@ jobs:
       - name: Setup wizard
         shell: pwsh
         run: ./packaging/build-installer.ps1 -Version 0.0.1 -PublishDir dummy
+      - name: Install, update, move and uninstall (silent)
+        # 설치 → 같은 버전으로 다시 실행(업데이트) → [수정]의 설치 위치 변경 → 제거를 차례로 확인합니다.
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = (Resolve-Path packaging/out/Flipix-Setup-0.0.1.exe).Path
+          $key = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{6B0E5F52-3C1B-4D52-9E58-4F1C2A7D9A10}_is1'
+          $copy = Join-Path $env:LOCALAPPDATA 'Flipix\Installer\Flipix-Setup.exe'
+          function Run($exe, $argList) {
+            $p = Start-Process $exe -ArgumentList $argList -Wait -PassThru
+            if ($p.ExitCode) { throw "$exe $argList -> exit $($p.ExitCode)" }
+          }
+          $first = Join-Path $env:RUNNER_TEMP 'FlipixA'
+          Run $setup "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /CURRENTUSER /TASKS=`"`" /DIR=`"$first`" /LOG=`"$env:RUNNER_TEMP\1-install.log`""
+          if (-not (Test-Path "$first\ImageConverter.exe")) { throw "not installed" }
+          $k = Get-ItemProperty $key
+          if ($k.NoModify -ne 0 -or $k.ModifyPath -notlike "*Flipix-Setup.exe*/MODIFY") { throw "Modify button not enabled: $($k.ModifyPath) $($k.NoModify)" }
+          if (-not (Test-Path $copy)) { throw "installer copy missing" }
+
+          # 업데이트: 이미 설치돼 있으면 같은 위치에 그대로
+          Run $setup "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG=`"$env:RUNNER_TEMP\2-update.log`""
+          if ((Get-ItemProperty $key).'Inno Setup: App Path' -ne $first) { throw "update changed the install folder" }
+
+          # 수정 > 설치 위치 변경
+          $second = Join-Path $env:RUNNER_TEMP 'FlipixB'
+          Run $copy "/MODIFY /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$second`" /LOG=`"$env:RUNNER_TEMP\3-move.log`""
+          if (-not (Test-Path "$second\ImageConverter.exe")) { throw "not moved" }
+          if (Test-Path $first) { throw "old folder left behind: $(Get-ChildItem $first -Recurse | Out-String)" }
+          if ((Get-ItemProperty $key).'Inno Setup: App Path' -ne $second) { throw "uninstall info still points to the old folder" }
+
+          # 제거
+          Run "$second\unins000.exe" "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"
+          for ($i = 0; $i -lt 30 -and (Test-Path $key); $i++) { Start-Sleep -Seconds 1 } # 제거 도우미가 임시 폴더에서 이어서 돎
+          if (Test-Path $key) { throw "uninstall info left" }
+          if (Test-Path $copy) { throw "installer copy left" }
+          Write-Host "install/update/move/uninstall OK"
+      - name: Installer logs
+        if: always()
+        shell: pwsh
+        run: Get-ChildItem $env:RUNNER_TEMP -Filter '*-*.log' | ForEach-Object { "==== $($_.Name)"; Get-Content $_.FullName -Tail 40 }

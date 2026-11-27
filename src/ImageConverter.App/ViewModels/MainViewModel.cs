@@ -8,6 +8,7 @@ using ImageConverter.Core;
 using ImageConverter.Core.Batch;
 using ImageConverter.Core.Engine;
 using ImageConverter.Core.Settings;
+using ImageConverter.Core.Updates;
 using Microsoft.Win32;
 
 namespace ImageConverter.App.ViewModels;
@@ -38,6 +39,8 @@ public sealed class MainViewModel : ObservableObject
     private bool _parallelismChanged;
     private OriginalFileAction _originalAction;
     private string _originalMoveFolder = "";
+    private UpdateInfo? _update;
+    private bool _isUpdating;
 
     public MainViewModel(IConversionEngine engine, SettingsStore store)
     {
@@ -73,6 +76,9 @@ public sealed class MainViewModel : ObservableObject
         CancelCommand = new RelayCommand(() => _cts?.Cancel(), () => IsRunning);
         OpenSettingsCommand = new RelayCommand(OpenSettings, () => CanEdit);
         ContactCommand = new RelayCommand(OpenContact);
+        UpdateCommand = new RelayCommand(() => _ = UpdateAsync(), () => _update != null && !_isUpdating);
+        CheckUpdatesCommand = new RelayCommand(() => _ = CheckForUpdatesAsync(userAsked: true), () => !_isUpdating);
+        CreateShortcutCommand = new RelayCommand(CreateShortcut);
     }
 
     public ObservableCollection<ConversionJob> Jobs { get; } = new();
@@ -139,6 +145,9 @@ public sealed class MainViewModel : ObservableObject
     public ICommand CancelCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand ContactCommand { get; }
+    public ICommand UpdateCommand { get; }
+    public ICommand CheckUpdatesCommand { get; }
+    public ICommand CreateShortcutCommand { get; }
 
     /// <summary>개발자에게 연락하는 곳(X 프로필). 사용자가 2026-11-25 지정.</summary>
     public const string ContactUrl = "https://x.com/Liberali_0";
@@ -386,6 +395,103 @@ public sealed class MainViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusText = $"브라우저를 열지 못했습니다. {ContactUrl} 로 직접 접속해 주세요. ({ex.Message})";
+        }
+    }
+
+    // ---------- 업데이트 · 바로 가기 ----------
+
+    public string VersionText => "Flipix " + UpdateService.CurrentVersionText;
+
+    /// <summary>새 버전이 있을 때만 상단 막대에 업데이트 단추를 보인다.</summary>
+    public bool UpdateAvailable => _update != null;
+    public string UpdateButtonText => _update is null ? "" : $"새 버전 v{_update.Version} 업데이트";
+
+    /// <summary>Workshop을 열 때 새 버전 확인. 메뉴에서 끄고 켠다.</summary>
+    public bool CheckForUpdatesOnStart
+    {
+        get => _settings.CheckForUpdates;
+        set
+        {
+            if (_settings.CheckForUpdates == value) return;
+            _settings.CheckForUpdates = value;
+            Raise();
+            try { _store.Save(_settings); } catch { /* 저장 실패는 무시 */ }
+        }
+    }
+
+    /// <summary>앱 시작 때 한 번. 설정이 꺼져 있으면 아무것도 하지 않는다.</summary>
+    public Task CheckOnStartAsync() => _settings.CheckForUpdates ? CheckForUpdatesAsync(userAsked: false) : Task.CompletedTask;
+
+    private async Task CheckForUpdatesAsync(bool userAsked)
+    {
+        try
+        {
+            if (userAsked) StatusText = "새 버전을 확인하는 중…";
+            var info = await UpdateService.CheckAsync();
+            SetUpdate(info);
+            if (userAsked)
+                StatusText = info is null ? $"최신 버전({UpdateService.CurrentVersionText})을 쓰고 있어요." : $"새 버전 v{info.Version}이(가) 있어요. 위의 업데이트 단추를 누르세요.";
+        }
+        catch (Exception ex)
+        {
+            // 시작할 때 자동 확인은 인터넷이 없어도 조용히 넘어간다.
+            if (userAsked) StatusText = "새 버전을 확인하지 못했습니다: " + ex.Message;
+        }
+    }
+
+    private void SetUpdate(UpdateInfo? info)
+    {
+        _update = info;
+        Raise(nameof(UpdateAvailable));
+        Raise(nameof(UpdateButtonText));
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private async Task UpdateAsync()
+    {
+        var info = _update;
+        if (info is null || _isUpdating) return;
+        var owner = System.Windows.Application.Current.MainWindow;
+        if (IsRunning)
+        {
+            System.Windows.MessageBox.Show(owner, "변환이 끝난 뒤에 업데이트해 주세요.", "Flipix 업데이트",
+                System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            return;
+        }
+        var answer = System.Windows.MessageBox.Show(owner,
+            $"Flipix를 v{info.Version}(으)로 업데이트할까요?\n\n지금 설치된 위치와 설정은 그대로 두고 프로그램만 바꿔요. 업데이트하는 동안 Workshop이 잠시 닫혔다가 다시 열려요.",
+            "Flipix 업데이트", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+        if (answer != System.Windows.MessageBoxResult.Yes) return;
+
+        _isUpdating = true;
+        CommandManager.InvalidateRequerySuggested();
+        try
+        {
+            StatusText = $"v{info.Version} 내려받는 중…";
+            var progress = new Progress<double>(p => StatusText = $"v{info.Version} 내려받는 중… {p:0}%");
+            var setup = await UpdateService.DownloadAsync(info, progress);
+            StatusText = "업데이트를 시작합니다…";
+            UpdateService.LaunchInstaller(setup);
+            System.Windows.Application.Current.Shutdown();
+        }
+        catch (Exception ex)
+        {
+            StatusText = "업데이트하지 못했습니다: " + ex.Message;
+            _isUpdating = false;
+            CommandManager.InvalidateRequerySuggested();
+        }
+    }
+
+    private void CreateShortcut()
+    {
+        try
+        {
+            DesktopShortcut.Create();
+            StatusText = "바탕 화면에 Flipix 바로 가기를 만들었어요.";
+        }
+        catch (Exception ex)
+        {
+            StatusText = "바로 가기를 만들지 못했습니다: " + ex.Message;
         }
     }
 }
